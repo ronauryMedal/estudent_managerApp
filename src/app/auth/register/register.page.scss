@@ -1,0 +1,237 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.signup-ion-content {
+  --background: #000000;
+}
+
+.signup-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  height: 100%;
+  background-color: #000;
+}
+
+.header-section {
+  position: relative;
+  flex: 0.25 1 0%;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  min-height: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.header-pattern {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.85;
+  background-image:
+    radial-gradient(
+      circle at 15% 35%,
+      rgba(255, 255, 255, 0.14) 0 5px,
+      transparent 6px
+    ),
+    radial-gradient(
+      circle at 82% 22%,
+      rgba(255, 255, 255, 0.1) 0 18px,
+      transparent 19px
+    ),
+    linear-gradient(
+      135deg,
+      transparent 44%,
+      rgba(255, 255, 255, 0.05) 45%,
+      rgba(255, 255, 255, 0.05) 47%,
+      transparent 48%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 26px,
+      rgba(255, 255, 255, 0.025) 26px,
+      rgba(255, 255, 255, 0.025) 27px
+    );
+  background-size:
+    48px 48px,
+    88px 88px,
+    22px 22px,
+    100% 100%;
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.header-start {
+  display: flex;
+  width: 48px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.back-btn {
+  --color: #fff;
+  --icon-margin-start: 0;
+  --icon-margin-end: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  --min-width: 48px;
+
+  margin: 0;
+}
+
+.header-content h1 {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 500;
+  text-align: center;
+  color: #fff;
+}
+
+.spacer {
+  flex-shrink: 0;
+  width: 48px;
+}
+
+.form-section {
+  flex: 0.75 1 0%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  padding: 30px 25px;
+  overflow-y: auto;
+  background: #fff;
+  border-top-left-radius: 70px;
+}
+
+.form-section__inner {
+  display: flex;
+  width: 100%;
+  max-width: 400px;
+  flex-direction: column;
+}
+
+.signup-alert {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 1rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: #b91c1c;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+form {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.input-group {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.input-group__label {
+  display: block;
+  margin-bottom: 6px;
+  padding-inline: 3px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.input-group__shell {
+  padding: 3px 15px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  transition: box-shadow 0.15s ease;
+}
+
+.input-group__shell:focus-within {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+  background: #fafafa;
+}
+
+.signup-ion-input {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: #171717;
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 6px;
+  --padding-bottom: 8px;
+  --highlight-height: 0;
+  --highlight-color-focused: transparent;
+  --highlight-color-valid: transparent;
+  --highlight-color-invalid: transparent;
+  --border-width: 0;
+  --placeholder-color: #71717a;
+  --placeholder-opacity: 1;
+}
+
+.field-error {
+  margin: 6px 0 0;
+  padding-inline: 3px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #dc2626;
+}
+
+.signup-button {
+  width: 100%;
+  height: 50px;
+  margin-top: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: none;
+  --background: #000;
+  --border-radius: 12px;
+  --color: #fff;
+}
+
+.footer-text {
+  margin-top: 25px;
+  padding-bottom: max(15px, env(safe-area-inset-bottom, 0px));
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .footer-text__link {
+    margin-left: 0.25rem;
+    font-weight: bold;
+    color: #000;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  a:hover .footer-text__link {
+    opacity: 0.85;
+  }
+}

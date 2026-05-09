@@ -1,4 +1,4 @@
-<ion-content [fullscreen]="true" class="login-ion-content" [scrollY]="false">
+<ion-content [fullscreen]="true" class="login-ion-content">
   <div class="login-container">
     <div class="header-section">
       <div class="logo-placeholder">
@@ -7,68 +7,73 @@
     </div>
 
     <div class="form-section">
-      <h2>Login</h2>
+      <div class="form-section__inner">
+        <h2 class="form-section__title">Login</h2>
 
-      @if (errorMessage(); as err) {
-        <p class="login-alert" role="alert">{{ err }}</p>
-      }
+        @if (errorMessage(); as err) {
+          <p class="login-alert" role="alert">{{ err }}</p>
+        }
 
-      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-        <div class="input-group">
-          <ion-item lines="none">
-            <ion-label position="stacked">Email</ion-label>
-            <ion-input
-              formControlName="email"
-              type="email"
-              autocomplete="email"
-              placeholder="tuemail@ejemplo.com"
-            ></ion-input>
-          </ion-item>
-          @if (
-            form.controls.email.invalid &&
-            (form.controls.email.touched || form.controls.email.dirty)
-          ) {
-            <p class="field-error">Introduce un email válido.</p>
-          }
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div class="input-field">
+            <label class="input-field__label" for="login-email">Email</label>
+            <div class="input-field__shell">
+              <ion-input
+                id="login-email"
+                class="login-ion-input"
+                formControlName="email"
+                inputmode="email"
+                type="email"
+                autocomplete="email"
+                placeholder="tuemail@ejemplo.com"
+              ></ion-input>
+            </div>
+            @if (showEmailError()) {
+              <p class="field-error" role="alert">Introduce un email válido.</p>
+            }
+          </div>
+
+          <div class="input-field">
+            <label class="input-field__label" for="login-password"
+              >Password</label
+            >
+            <div class="input-field__shell">
+              <ion-input
+                id="login-password"
+                class="login-ion-input"
+                formControlName="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="••••••••"
+              ></ion-input>
+            </div>
+            @if (showPasswordError()) {
+              <p class="field-error" role="alert">
+                La contraseña es obligatoria (mín. 6 caracteres).
+              </p>
+            }
+          </div>
+
+          <ion-button
+            expand="block"
+            type="submit"
+            class="login-button"
+            [disabled]="submitting()"
+          >
+            @if (submitting()) {
+              Ingresando…
+            } @else {
+              Login
+            }
+          </ion-button>
+        </form>
+
+        <div class="footer-text">
+          Don't have any account?
+          <a routerLink="/register">
+            <span class="footer-text__link">Sign Up</span>
+          </a>
         </div>
-
-        <div class="input-group">
-          <ion-item lines="none">
-            <ion-label position="stacked">Password</ion-label>
-            <ion-input
-              formControlName="password"
-              type="password"
-              autocomplete="current-password"
-              placeholder="••••••••"
-            ></ion-input>
-          </ion-item>
-          @if (
-            form.controls.password.invalid &&
-            (form.controls.password.touched || form.controls.password.dirty)
-          ) {
-            <p class="field-error">
-              La contraseña es obligatoria (mín. 6 caracteres).
-            </p>
-          }
-        </div>
-
-        <ion-button
-          expand="block"
-          type="submit"
-          class="login-button"
-          [disabled]="submitting()"
-        >
-          @if (submitting()) {
-            Ingresando…
-          } @else {
-            Login
-          }
-        </ion-button>
-      </form>
-
-      <div class="footer-text">
-        Don't have any account?
-        <a routerLink="/register"><span class="footer-text__link">Sign Up</span></a>
       </div>
     </div>
   </div>

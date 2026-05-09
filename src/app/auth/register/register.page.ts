@@ -7,8 +7,13 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import {
+  IonBackButton,
+  IonButton,
+  IonContent,
+  IonInput,
+} from '@ionic/angular/standalone';
 
-import { AuthShellComponent } from '../components/auth-shell/auth-shell.component';
 import { AuthService } from '../../core/services/auth.service';
 
 function passwordsMatch(
@@ -31,10 +36,13 @@ function passwordsMatch(
   imports: [
     ReactiveFormsModule,
     RouterLink,
-    AuthShellComponent,
+    IonContent,
+    IonBackButton,
+    IonInput,
+    IonButton,
   ],
   templateUrl: './register.page.html',
-  styleUrl: './register.page.css',
+  styleUrl: './register.page.scss',
 })
 export class RegisterPage {
   private readonly fb = inject(FormBuilder);
@@ -42,6 +50,7 @@ export class RegisterPage {
   private readonly router = inject(Router);
 
   readonly submitting = signal(false);
+  readonly submittedAttempt = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group(
@@ -59,6 +68,7 @@ export class RegisterPage {
     this.errorMessage.set(null);
 
     if (this.form.invalid) {
+      this.submittedAttempt.set(true);
       this.form.markAllAsTouched();
       return;
     }
@@ -85,5 +95,42 @@ export class RegisterPage {
           );
         },
       });
+  }
+
+  showFirstNameError(): boolean {
+    const c = this.form.controls.firstName;
+    return c.invalid && (this.submittedAttempt() || c.touched);
+  }
+
+  showLastNameError(): boolean {
+    const c = this.form.controls.lastName;
+    return c.invalid && (this.submittedAttempt() || c.touched);
+  }
+
+  showEmailError(): boolean {
+    const c = this.form.controls.email;
+    return c.invalid && (this.submittedAttempt() || c.touched);
+  }
+
+  showPasswordError(): boolean {
+    const c = this.form.controls.password;
+    return c.invalid && (this.submittedAttempt() || c.touched);
+  }
+
+  showConfirmError(): boolean {
+    const c = this.form.controls.confirmPassword;
+    return c.invalid && (this.submittedAttempt() || c.touched);
+  }
+
+  showPasswordMismatch(): boolean {
+    const mismatch = this.form.errors?.['passwordsMismatch'] === true;
+    if (!mismatch) {
+      return false;
+    }
+    const confirm = this.form.controls.confirmPassword;
+    return (
+      this.submittedAttempt() ||
+      (confirm.touched && (confirm.dirty || this.form.controls.password.touched))
+    );
   }
 }

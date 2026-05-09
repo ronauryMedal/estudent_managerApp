@@ -1,134 +1,148 @@
-<app-auth-shell variant="register">
-  <div class="auth-page">
-    @if (errorMessage(); as err) {
-      <p class="auth-alert" role="alert">{{ err }}</p>
-    }
-
-    <form
-      class="auth-form"
-      [formGroup]="form"
-      (ngSubmit)="submit()"
-      novalidate
-    >
-      <div class="auth-field">
-        <label class="auth-label" for="reg-first">First name</label>
-        <input
-          id="reg-first"
-          class="auth-input"
-          type="text"
-          formControlName="firstName"
-          autocomplete="given-name"
-          placeholder="Vijay"
-        />
-        @if (
-          form.controls.firstName.invalid &&
-          (form.controls.firstName.touched || form.controls.firstName.dirty)
-        ) {
-          <p class="auth-field-error">
-            Introduce al menos 2 caracteres.
-          </p>
-        }
+<ion-content [fullscreen]="true" class="signup-ion-content">
+  <div class="signup-container">
+    <div class="header-section">
+      <div class="header-pattern" aria-hidden="true"></div>
+      <div class="header-content">
+        <div class="header-start">
+          <ion-back-button
+            defaultHref="/login"
+            text=""
+            class="back-btn"
+            aria-label="Volver"
+          ></ion-back-button>
+        </div>
+        <h1>Sign Up</h1>
+        <div class="spacer" aria-hidden="true"></div>
       </div>
+    </div>
 
-      <div class="auth-field">
-        <label class="auth-label" for="reg-last">Last name</label>
-        <input
-          id="reg-last"
-          class="auth-input"
-          type="text"
-          formControlName="lastName"
-          autocomplete="family-name"
-          placeholder="Bhuva"
-        />
-        @if (
-          form.controls.lastName.invalid &&
-          (form.controls.lastName.touched || form.controls.lastName.dirty)
-        ) {
-          <p class="auth-field-error">
-            Introduce al menos 2 caracteres.
-          </p>
+    <div class="form-section">
+      <div class="form-section__inner">
+        @if (errorMessage(); as err) {
+          <p class="signup-alert" role="alert">{{ err }}</p>
         }
+
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div class="input-group">
+            <label class="input-group__label" for="reg-first">First name</label>
+            <div class="input-group__shell">
+              <ion-input
+                id="reg-first"
+                class="signup-ion-input"
+                formControlName="firstName"
+                type="text"
+                autocomplete="given-name"
+                placeholder="Vijay"
+              ></ion-input>
+            </div>
+            @if (showFirstNameError()) {
+              <p class="field-error" role="alert">
+                Introduce al menos 2 caracteres.
+              </p>
+            }
+          </div>
+
+          <div class="input-group">
+            <label class="input-group__label" for="reg-last">Last name</label>
+            <div class="input-group__shell">
+              <ion-input
+                id="reg-last"
+                class="signup-ion-input"
+                formControlName="lastName"
+                type="text"
+                autocomplete="family-name"
+                placeholder="Bhuva"
+              ></ion-input>
+            </div>
+            @if (showLastNameError()) {
+              <p class="field-error" role="alert">
+                Introduce al menos 2 caracteres.
+              </p>
+            }
+          </div>
+
+          <div class="input-group">
+            <label class="input-group__label" for="reg-email">Email</label>
+            <div class="input-group__shell">
+              <ion-input
+                id="reg-email"
+                class="signup-ion-input"
+                formControlName="email"
+                inputmode="email"
+                type="email"
+                autocomplete="email"
+                placeholder="vijaybhuva90@gmail.com"
+              ></ion-input>
+            </div>
+            @if (showEmailError()) {
+              <p class="field-error" role="alert">
+                Introduce un email válido.
+              </p>
+            }
+          </div>
+
+          <div class="input-group">
+            <label class="input-group__label" for="reg-password">Password</label>
+            <div class="input-group__shell">
+              <ion-input
+                id="reg-password"
+                class="signup-ion-input"
+                formControlName="password"
+                type="password"
+                autocomplete="new-password"
+                placeholder="••••••••"
+              ></ion-input>
+            </div>
+            @if (showPasswordError()) {
+              <p class="field-error" role="alert">Mínimo 6 caracteres.</p>
+            }
+          </div>
+
+          <div class="input-group">
+            <label class="input-group__label" for="reg-confirm"
+              >Confirm password</label
+            >
+            <div class="input-group__shell">
+              <ion-input
+                id="reg-confirm"
+                class="signup-ion-input"
+                formControlName="confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                placeholder="••••••••"
+              ></ion-input>
+            </div>
+            @if (showConfirmError()) {
+              <p class="field-error" role="alert">
+                Confirma tu contraseña.
+              </p>
+            }
+            @if (showPasswordMismatch()) {
+              <p class="field-error" role="alert">
+                Las contraseñas no coinciden.
+              </p>
+            }
+          </div>
+
+          <ion-button
+            expand="block"
+            type="submit"
+            class="signup-button"
+            [disabled]="submitting()"
+          >
+            @if (submitting()) {
+              Creando cuenta…
+            } @else {
+              Sign Up
+            }
+          </ion-button>
+        </form>
+
+        <div class="footer-text">
+          Already have any account?
+          <a routerLink="/login"><span class="footer-text__link">Sign In</span></a>
+        </div>
       </div>
-
-      <div class="auth-field">
-        <label class="auth-label" for="reg-email">Email</label>
-        <input
-          id="reg-email"
-          class="auth-input"
-          type="email"
-          formControlName="email"
-          autocomplete="email"
-          placeholder="vijaybhuva90@gmail.com"
-        />
-        @if (
-          form.controls.email.invalid &&
-          (form.controls.email.touched || form.controls.email.dirty)
-        ) {
-          <p class="auth-field-error">Introduce un email válido.</p>
-        }
-      </div>
-
-      <div class="auth-field">
-        <label class="auth-label" for="reg-password">Password</label>
-        <input
-          id="reg-password"
-          class="auth-input"
-          type="password"
-          formControlName="password"
-          autocomplete="new-password"
-          placeholder="••••••••"
-        />
-        @if (
-          form.controls.password.invalid &&
-          (form.controls.password.touched || form.controls.password.dirty)
-        ) {
-          <p class="auth-field-error">Mínimo 6 caracteres.</p>
-        }
-      </div>
-
-      <div class="auth-field">
-        <label class="auth-label" for="reg-confirm">Confirm password</label>
-        <input
-          id="reg-confirm"
-          class="auth-input"
-          type="password"
-          formControlName="confirmPassword"
-          autocomplete="new-password"
-          placeholder="••••••••"
-        />
-        @if (
-          form.controls.confirmPassword.invalid &&
-          (form.controls.confirmPassword.touched ||
-            form.controls.confirmPassword.dirty)
-        ) {
-          <p class="auth-field-error">Confirma tu contraseña.</p>
-        }
-        @if (
-          form.errors?.['passwordsMismatch'] &&
-          (form.touched || form.dirty)
-        ) {
-          <p class="auth-field-error">
-            Las contraseñas no coinciden.
-          </p>
-        }
-      </div>
-
-      <button
-        class="auth-btn-primary"
-        type="submit"
-        [disabled]="submitting()"
-      >
-        @if (submitting()) {
-          Creando cuenta…
-        } @else {
-          Sign Up
-        }
-      </button>
-    </form>
-
-    <p class="auth-footer">
-      Already have any account?
-      <a routerLink="/login" class="auth-footer-link">Sign In</a>
-    </p>
+    </div>
   </div>
-</app-auth-shell>
+</ion-content>

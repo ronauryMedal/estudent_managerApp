@@ -9,8 +9,6 @@ import {
   IonButton,
   IonContent,
   IonInput,
-  IonItem,
-  IonLabel,
 } from '@ionic/angular/standalone';
 
 import { AuthService } from '../../core/services/auth.service';
@@ -22,8 +20,6 @@ import { AuthService } from '../../core/services/auth.service';
     ReactiveFormsModule,
     RouterLink,
     IonContent,
-    IonItem,
-    IonLabel,
     IonInput,
     IonButton,
   ],
@@ -36,6 +32,7 @@ export class LoginPage {
   private readonly router = inject(Router);
 
   readonly submitting = signal(false);
+  readonly submittedAttempt = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
@@ -47,6 +44,7 @@ export class LoginPage {
     this.errorMessage.set(null);
 
     if (this.form.invalid) {
+      this.submittedAttempt.set(true);
       this.form.markAllAsTouched();
       return;
     }
@@ -66,5 +64,16 @@ export class LoginPage {
         );
       },
     });
+  }
+
+  /** Muestra error de campo tras intento de envío o tras salir del campo con datos inválidos */
+  showEmailError(): boolean {
+    const c = this.form.controls.email;
+    return c.invalid && (this.submittedAttempt() || c.touched);
+  }
+
+  showPasswordError(): boolean {
+    const c = this.form.controls.password;
+    return c.invalid && (this.submittedAttempt() || c.touched);
   }
 }
