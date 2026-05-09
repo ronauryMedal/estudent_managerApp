@@ -1,0 +1,75 @@
+<ion-content [fullscreen]="true" class="login-ion-content" [scrollY]="false">
+  <div class="login-container">
+    <div class="header-section">
+      <div class="logo-placeholder">
+        <!-- <img src="assets/tu-logo.png" alt="Logo" /> -->
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>Login</h2>
+
+      @if (errorMessage(); as err) {
+        <p class="login-alert" role="alert">{{ err }}</p>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="input-group">
+          <ion-item lines="none">
+            <ion-label position="stacked">Email</ion-label>
+            <ion-input
+              formControlName="email"
+              type="email"
+              autocomplete="email"
+              placeholder="tuemail@ejemplo.com"
+            ></ion-input>
+          </ion-item>
+          @if (
+            form.controls.email.invalid &&
+            (form.controls.email.touched || form.controls.email.dirty)
+          ) {
+            <p class="field-error">Introduce un email válido.</p>
+          }
+        </div>
+
+        <div class="input-group">
+          <ion-item lines="none">
+            <ion-label position="stacked">Password</ion-label>
+            <ion-input
+              formControlName="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="••••••••"
+            ></ion-input>
+          </ion-item>
+          @if (
+            form.controls.password.invalid &&
+            (form.controls.password.touched || form.controls.password.dirty)
+          ) {
+            <p class="field-error">
+              La contraseña es obligatoria (mín. 6 caracteres).
+            </p>
+          }
+        </div>
+
+        <ion-button
+          expand="block"
+          type="submit"
+          class="login-button"
+          [disabled]="submitting()"
+        >
+          @if (submitting()) {
+            Ingresando…
+          } @else {
+            Login
+          }
+        </ion-button>
+      </form>
+
+      <div class="footer-text">
+        Don't have any account?
+        <a routerLink="/register"><span class="footer-text__link">Sign Up</span></a>
+      </div>
+    </div>
+  </div>
+</ion-content>

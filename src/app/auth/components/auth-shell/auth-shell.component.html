@@ -1,0 +1,43 @@
+<div class="auth-shell">
+  <div class="auth-shell__frame">
+    <div class="auth-shell__card">
+      <header class="auth-shell__header">
+        <div class="auth-shell__pattern" aria-hidden="true"></div>
+
+        @if (variant === 'login') {
+          <div class="auth-shell__logo-slot">
+            <ng-content select="[auth-logo]" />
+          </div>
+        } @else {
+          <div class="auth-shell__register-head">
+            <a
+              routerLink="/login"
+              class="auth-shell__back"
+              aria-label="Volver al inicio de sesión"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="auth-shell__back-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </a>
+            <h1 class="auth-shell__register-title">Sign Up</h1>
+          </div>
+        }
+      </header>
+
+      <main class="auth-shell__main">
+        <ng-content />
+      </main>
+    </div>
+  </div>
+</div>

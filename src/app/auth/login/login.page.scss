@@ -1,0 +1,145 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.login-ion-content {
+  --background: #000000;
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  height: 100%;
+  background-color: #000;
+}
+
+.header-section {
+  flex: 0.4 1 0%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  background: #000;
+}
+
+.logo-placeholder {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  border-radius: 15px;
+
+  img {
+    width: 80%;
+    height: auto;
+    object-fit: contain;
+  }
+}
+
+.form-section {
+  flex: 0.6 1 0%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  padding: 40px 30px;
+  background: #fff;
+  border-top-left-radius: 70px;
+
+  h2 {
+    margin: 0 0 40px;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #000;
+    text-align: center;
+    width: 100%;
+  }
+}
+
+.login-alert {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 1rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: #b91c1c;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+form {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.input-group {
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 5px 15px;
+  background: #f9f9f9;
+  border-radius: 12px;
+
+  ion-item {
+    --background: transparent;
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    --min-height: 0;
+
+    ion-label {
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    ion-input {
+      font-size: 1rem;
+      --padding-top: 10px;
+    }
+  }
+}
+
+.field-error {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: #dc2626;
+}
+
+.login-button {
+  width: 100%;
+  height: 50px;
+  margin-top: 30px;
+  font-weight: 500;
+  text-transform: none;
+  --background: #000;
+  --border-radius: 12px;
+  --color: #fff;
+}
+
+.footer-text {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 24px;
+  padding-bottom: 20px;
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .footer-text__link {
+    margin-left: 0.25rem;
+    font-weight: bold;
+    color: #000;
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,208 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 100%;
+}
+
+.auth-shell {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  background-color: #e5e5e5;
+  color-scheme: light;
+  color: #171717;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.auth-shell *,
+.auth-shell *::before,
+.auth-shell *::after {
+  box-sizing: border-box;
+}
+
+.auth-shell__frame {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .auth-shell__frame {
+    padding: 2rem 1.25rem;
+  }
+}
+
+.auth-shell__card {
+  display: flex;
+  width: 100%;
+  max-width: 28rem;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background-color: #fff;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.auth-shell__header {
+  position: relative;
+  overflow: hidden;
+  min-height: clamp(10.5rem, 32vh, 14rem);
+  padding-bottom: 2.75rem;
+  color: #fff;
+  background-color: #121212;
+}
+
+.auth-shell__pattern {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 1;
+  background-color: transparent;
+  background-image:
+    radial-gradient(
+      circle at 15% 25%,
+      rgba(255, 255, 255, 0.22) 0 4px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 78% 18%,
+      rgba(255, 255, 255, 0.16) 0 14px,
+      transparent 15px
+    ),
+    radial-gradient(
+      circle at 55% 65%,
+      rgba(255, 255, 255, 0.12) 0 20px,
+      transparent 21px
+    ),
+    linear-gradient(
+      135deg,
+      transparent 45%,
+      rgba(255, 255, 255, 0.06) 46%,
+      rgba(255, 255, 255, 0.06) 48%,
+      transparent 49%
+    ),
+    linear-gradient(
+      -35deg,
+      transparent 42%,
+      rgba(255, 255, 255, 0.05) 43%,
+      rgba(255, 255, 255, 0.05) 45%,
+      transparent 46%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 28px,
+      rgba(255, 255, 255, 0.025) 28px,
+      rgba(255, 255, 255, 0.025) 29px
+    );
+  background-size:
+    52px 52px,
+    72px 72px,
+    100% 100%,
+    24px 24px,
+    20px 20px,
+    100% 100%;
+}
+
+.auth-shell__logo-slot {
+  position: relative;
+  display: flex;
+  min-height: 7.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .auth-shell__logo-slot {
+    min-height: 8.5rem;
+    padding-top: 3rem;
+  }
+}
+
+.auth-shell__register-head {
+  position: relative;
+  display: flex;
+  min-height: 7rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .auth-shell__register-head {
+    min-height: 8rem;
+  }
+}
+
+.auth-shell__back {
+  position: absolute;
+  left: 0.75rem;
+  top: 2.25rem;
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 9999px;
+  transition: background-color 0.15s ease;
+}
+
+@media (min-width: 640px) {
+  .auth-shell__back {
+    left: 1rem;
+    top: 2.5rem;
+  }
+}
+
+.auth-shell__back:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.auth-shell__back-icon {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+.auth-shell__register-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #fff;
+}
+
+/* Panel blanco superpuesto: curva más marcada arriba-izquierda (asimétrico) */
+.auth-shell__main {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  margin-top: -3.25rem;
+  border-top-left-radius: 3rem;
+  border-top-right-radius: 1.125rem;
+  background-color: #fff;
+  padding: 2.25rem 1.5rem 2.5rem;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.06);
+}
+
+@media (min-width: 640px) {
+  .auth-shell__main {
+    padding: 2.5rem 2rem 2.5rem;
+  }
+}

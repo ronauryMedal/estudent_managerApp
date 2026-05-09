@@ -1,0 +1,134 @@
+<app-auth-shell variant="register">
+  <div class="auth-page">
+    @if (errorMessage(); as err) {
+      <p class="auth-alert" role="alert">{{ err }}</p>
+    }
+
+    <form
+      class="auth-form"
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      novalidate
+    >
+      <div class="auth-field">
+        <label class="auth-label" for="reg-first">First name</label>
+        <input
+          id="reg-first"
+          class="auth-input"
+          type="text"
+          formControlName="firstName"
+          autocomplete="given-name"
+          placeholder="Vijay"
+        />
+        @if (
+          form.controls.firstName.invalid &&
+          (form.controls.firstName.touched || form.controls.firstName.dirty)
+        ) {
+          <p class="auth-field-error">
+            Introduce al menos 2 caracteres.
+          </p>
+        }
+      </div>
+
+      <div class="auth-field">
+        <label class="auth-label" for="reg-last">Last name</label>
+        <input
+          id="reg-last"
+          class="auth-input"
+          type="text"
+          formControlName="lastName"
+          autocomplete="family-name"
+          placeholder="Bhuva"
+        />
+        @if (
+          form.controls.lastName.invalid &&
+          (form.controls.lastName.touched || form.controls.lastName.dirty)
+        ) {
+          <p class="auth-field-error">
+            Introduce al menos 2 caracteres.
+          </p>
+        }
+      </div>
+
+      <div class="auth-field">
+        <label class="auth-label" for="reg-email">Email</label>
+        <input
+          id="reg-email"
+          class="auth-input"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="vijaybhuva90@gmail.com"
+        />
+        @if (
+          form.controls.email.invalid &&
+          (form.controls.email.touched || form.controls.email.dirty)
+        ) {
+          <p class="auth-field-error">Introduce un email válido.</p>
+        }
+      </div>
+
+      <div class="auth-field">
+        <label class="auth-label" for="reg-password">Password</label>
+        <input
+          id="reg-password"
+          class="auth-input"
+          type="password"
+          formControlName="password"
+          autocomplete="new-password"
+          placeholder="••••••••"
+        />
+        @if (
+          form.controls.password.invalid &&
+          (form.controls.password.touched || form.controls.password.dirty)
+        ) {
+          <p class="auth-field-error">Mínimo 6 caracteres.</p>
+        }
+      </div>
+
+      <div class="auth-field">
+        <label class="auth-label" for="reg-confirm">Confirm password</label>
+        <input
+          id="reg-confirm"
+          class="auth-input"
+          type="password"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+          placeholder="••••••••"
+        />
+        @if (
+          form.controls.confirmPassword.invalid &&
+          (form.controls.confirmPassword.touched ||
+            form.controls.confirmPassword.dirty)
+        ) {
+          <p class="auth-field-error">Confirma tu contraseña.</p>
+        }
+        @if (
+          form.errors?.['passwordsMismatch'] &&
+          (form.touched || form.dirty)
+        ) {
+          <p class="auth-field-error">
+            Las contraseñas no coinciden.
+          </p>
+        }
+      </div>
+
+      <button
+        class="auth-btn-primary"
+        type="submit"
+        [disabled]="submitting()"
+      >
+        @if (submitting()) {
+          Creando cuenta…
+        } @else {
+          Sign Up
+        }
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Already have any account?
+      <a routerLink="/login" class="auth-footer-link">Sign In</a>
+    </p>
+  </div>
+</app-auth-shell>

@@ -1,0 +1,13 @@
+/**
+ * Tailwind v4 + Flowbite en CSS plano: PostCSS (@tailwindcss/postcss) lo procesa.
+ * Así evitamos @import de estas rutas dentro de global.scss (deprecado en Dart Sass).
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@import '../node_modules/flowbite/src/themes/default.css';
+@import 'tailwindcss';
+
+@plugin 'flowbite/plugin';
+@source '../node_modules/flowbite';
+@source './**/*.html';
+@source './**/*.ts';

@@ -35,3 +35,24 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
+
+/* Ionic asigna .ion-page al host del componente enlazado (p. ej. app-login) */
+/* Login: pantalla completa oscura; register sigue con lienzo claro */
+app-login.ion-page {
+  --background: #000000;
+  background-color: #000000 !important;
+  color-scheme: light;
+}
+
+app-register.ion-page {
+  --background: #ffffff;
+  background-color: #ffffff !important;
+  color-scheme: light;
+}
+
+app-login,
+app-register {
+  display: block;
+  height: 100%;
+  min-height: 100%;
+}

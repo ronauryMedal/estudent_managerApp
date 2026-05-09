@@ -1,3 +1,4 @@
 export const environment = {
-  production: true
+  production: true,
+  apiUrl: 'https://TU-DOMINIO-DE-PRODUCCION.com',
 };
