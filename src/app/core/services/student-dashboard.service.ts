@@ -6,37 +6,30 @@ import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { apiOrigin } from '../auth-storage';
 import {
+  QuarterSubjectRow,
   StudentDashboardPayload,
-  StudentDashboardStats,
 } from '../models/student-dashboard.model';
+import {
+  Subject,
+  SubjectModality,
+  SUBJECT_MODALITY_LABELS,
+} from '../models/subject.model';
 import { Task } from '../models/task.model';
+import { User } from '../models/user.model';
+import { UserApprovedSubject } from '../models/user-approved-subject.model';
+import { UserCareer } from '../models/user-career.model';
+import { studentAcademicRefs } from '../utils/student-academic-refs';
+import {
+  subjectCourseDetailLine,
+  subjectScheduleLines,
+} from '../utils/subject-schedule-display';
 
 const UPCOMING_TASK_LIMIT = 5;
 
-function numFromRecord(
-  obj: Record<string, unknown>,
-  keys: string[],
-): number | undefined {
-  for (const k of keys) {
-    const v = obj[k];
-    if (typeof v === 'number' && !Number.isNaN(v)) {
-      return v;
-    }
-  }
-  return undefined;
-}
-
-function hasAnyKey(obj: Record<string, unknown>, keys: string[]): boolean {
-  return keys.some((k) => k in obj);
-}
-
-/** Tareas no marcadas como completadas (si no existe `completed`, cuenta todas). */
-export function countOpenTasks(tasks: Task[]): number {
-  return tasks.filter((t) => t.completed !== true).length;
-}
+type ApprovedMine = UserApprovedSubject & { subject?: Subject };
 
 /** Próximas entregas: abiertas, por `dueDate` ascendente. */
-export function pickUpcomingTasks(
+function pickUpcomingTasks(
   tasks: Task[],
   limit = UPCOMING_TASK_LIMIT,
 ): Task[] {
@@ -54,75 +47,107 @@ export class StudentDashboardService {
   private readonly http = inject(HttpClient);
   private readonly apiBase = apiOrigin(environment.apiUrl);
 
-  /** Resumen del progreso + tareas (métricas y lista prioritaria). */
-  loadDashboard(userId: string): Observable<StudentDashboardPayload> {
+  /** Tareas próximas + materias del cuatrimestre (o todas las inscritas si no hay filtro). */
+  loadDashboard(user: User): Observable<StudentDashboardPayload> {
     return forkJoin({
-      summary: this.http
-        .get<unknown>(`${this.apiBase}/users/${userId}/progress/summary`)
-        .pipe(catchError(() => of(null))),
       tasks: this.http
         .get<Task[]>(`${this.apiBase}/tasks`)
         .pipe(catchError(() => of([] as Task[]))),
+      approved: this.http
+        .get<ApprovedMine[]>(`${this.apiBase}/user-approved-subjects/me`)
+        .pipe(catchError(() => of([] as ApprovedMine[]))),
+      subjects: this.http
+        .get<Subject[]>(`${this.apiBase}/subjects`)
+        .pipe(catchError(() => of([] as Subject[]))),
+      myCareer: this.http
+        .get<UserCareer>(`${this.apiBase}/user-careers/me`)
+        .pipe(catchError(() => of(null))),
     }).pipe(
-      map(({ summary, tasks }) => {
-        const record =
-          summary && typeof summary === 'object' && !Array.isArray(summary)
-            ? (summary as Record<string, unknown>)
-            : {};
+      map(({ tasks, approved, subjects, myCareer }) => {
+        const refs = studentAcademicRefs(user, myCareer);
+        const quarterSubjects = this.buildQuarterSubjectRows(
+          approved,
+          subjects,
+          refs,
+        );
+        const quarterSectionSubtitle =
+          refs.currentSemester != null
+            ? `Cuatrimestre académico n.º ${refs.currentSemester}`
+            : null;
+
         return {
-          stats: this.mergeStats(record, tasks),
           upcomingTasks: pickUpcomingTasks(tasks),
+          quarterSubjects,
+          quarterSectionSubtitle,
         };
       }),
     );
   }
 
-  private mergeStats(
-    summary: Record<string, unknown>,
-    tasks: Task[],
-  ): StudentDashboardStats {
-    const totalKeys = [
-      'totalSubjects',
-      'total_subjects',
-      'subjectsTotal',
-      'subjects_total',
-      'totalMaterias',
-    ];
-    const approvedKeys = [
-      'approvedSubjects',
-      'approved_subjects',
-      'approved',
-      'aprobadas',
-      'passed',
-      'passedSubjects',
-    ];
-    const failedKeys = [
-      'failedSubjects',
-      'failed_subjects',
-      'failed',
-      'reproved',
-      'reprovedSubjects',
-      'reproved_subjects',
-      'reprobadas',
-    ];
-    const pendingTaskKeys = ['pendingTasks', 'pending_tasks', 'tasksPending'];
-
-    const totalSubjects = numFromRecord(summary, totalKeys) ?? 0;
-    const approvedSubjects = numFromRecord(summary, approvedKeys) ?? 0;
-    const failedSubjects = numFromRecord(summary, failedKeys) ?? 0;
-
-    let pendingTasks: number;
-    if (hasAnyKey(summary, pendingTaskKeys)) {
-      pendingTasks = numFromRecord(summary, pendingTaskKeys) ?? 0;
-    } else {
-      pendingTasks = countOpenTasks(tasks);
+  private buildQuarterSubjectRows(
+    approved: ApprovedMine[],
+    catalog: Subject[],
+    refs: ReturnType<typeof studentAcademicRefs>,
+  ): QuarterSubjectRow[] {
+    const byId = new Map<string, Subject>();
+    for (const s of catalog) {
+      byId.set(s.id, s);
+    }
+    for (const a of approved) {
+      if (a.subject) {
+        byId.set(a.subject.id, a.subject);
+      }
     }
 
+    const rows: QuarterSubjectRow[] = [];
+    const seen = new Set<string>();
+    for (const a of approved) {
+      const sub = byId.get(a.subjectId);
+      if (!sub || seen.has(sub.id)) {
+        continue;
+      }
+      seen.add(sub.id);
+      rows.push(this.toQuarterRow(sub));
+    }
+
+    const matchesCuatri = (r: QuarterSubjectRow) => {
+      const sub = byId.get(r.id);
+      if (!sub) {
+        return false;
+      }
+      if (refs.careerId && sub.careerId !== refs.careerId) {
+        return false;
+      }
+      if (refs.currentSemester != null) {
+        return sub.semesterNumber === refs.currentSemester;
+      }
+      return true;
+    };
+
+    const filtered = rows.filter(matchesCuatri);
+    const use = filtered.length > 0 ? filtered : rows;
+
+    use.sort((a, b) =>
+      a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+    );
+    return use;
+  }
+
+  private toQuarterRow(sub: Subject): QuarterSubjectRow {
+    const mod = sub.modality;
+    const modalityLabel =
+      mod && mod in SUBJECT_MODALITY_LABELS
+        ? SUBJECT_MODALITY_LABELS[mod as SubjectModality]
+        : '—';
+
     return {
-      totalSubjects,
-      approvedSubjects,
-      failedSubjects,
-      pendingTasks,
+      id: sub.id,
+      name: sub.name,
+      credits: sub.credits,
+      semesterNumber: sub.semesterNumber,
+      modalityLabel,
+      scheduleLines: subjectScheduleLines(sub),
+      courseDetailLine: subjectCourseDetailLine(sub),
     };
   }
 }

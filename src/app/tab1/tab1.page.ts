@@ -2,11 +2,6 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
   IonContent,
   IonHeader,
   IonIcon,
@@ -24,13 +19,10 @@ import { Subscription } from 'rxjs';
 import { addIcons } from 'ionicons';
 import {
   alertCircleOutline,
-  bookOutline,
-  checkmarkCircleOutline,
+  calendarOutline,
   chevronForwardOutline,
   clipboardOutline,
-  closeCircleOutline,
   libraryOutline,
-  listOutline,
 } from 'ionicons/icons';
 
 import { StudentDashboardPayload } from '../core/models/student-dashboard.model';
@@ -50,11 +42,6 @@ import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.comp
     IonToolbar,
     IonTitle,
     IonContent,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
-    IonCardContent,
     IonSpinner,
     IonButton,
     IonRefresher,
@@ -92,10 +79,7 @@ export class Tab1Page {
 
   constructor() {
     addIcons({
-      bookOutline,
-      checkmarkCircleOutline,
-      closeCircleOutline,
-      listOutline,
+      calendarOutline,
       alertCircleOutline,
       clipboardOutline,
       libraryOutline,
@@ -190,7 +174,7 @@ export class Tab1Page {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.loadSub = this.dashboard.loadDashboard(user.id).subscribe({
+    this.loadSub = this.dashboard.loadDashboard(user).subscribe({
       next: (p) => {
         this.payload.set(p);
         this.loading.set(false);

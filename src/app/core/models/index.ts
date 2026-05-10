@@ -3,6 +3,7 @@ export * from './auth.model';
 export * from './career.model';
 export * from './teacher.model';
 export * from './subject.model';
+export * from './subject-schedule.model';
 export * from './subject-teacher.model';
 export * from './user-career.model';
 export * from './user-semester.model';

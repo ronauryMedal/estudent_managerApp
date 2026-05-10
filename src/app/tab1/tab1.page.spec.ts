@@ -26,12 +26,6 @@ describe('Tab1Page', () => {
           useValue: {
             loadDashboard: () =>
               of({
-                stats: {
-                  totalSubjects: 2,
-                  approvedSubjects: 1,
-                  failedSubjects: 0,
-                  pendingTasks: 3,
-                },
                 upcomingTasks: [
                   {
                     id: 't1',
@@ -39,6 +33,18 @@ describe('Tab1Page', () => {
                     subjectId: 's1',
                     title: 'Entrega demo',
                     dueDate: new Date().toISOString(),
+                  },
+                ],
+                quarterSectionSubtitle: 'Cuatrimestre académico n.º 1',
+                quarterSubjects: [
+                  {
+                    id: 's1',
+                    name: 'Programación I',
+                    credits: 4,
+                    semesterNumber: 1,
+                    modalityLabel: 'Presencial',
+                    scheduleLines: ['Vie 18:00–20:00 · Lab 2'],
+                    courseDetailLine: 'Edificio Central · Sección A · PROG-2020-01',
                   },
                 ],
               }),

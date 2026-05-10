@@ -117,65 +117,60 @@
         </div>
       </section>
 
-      <section class="dashboard-section" aria-labelledby="stats-heading">
-        <h2 id="stats-heading" class="dashboard-section__title">
-          Resumen académico
+      <section class="dashboard-section" aria-labelledby="quarter-heading">
+        <h2 id="quarter-heading" class="dashboard-section__title">
+          <ion-icon
+            class="dashboard-section__title-icon"
+            name="calendar-outline"
+            aria-hidden="true"
+          ></ion-icon>
+          Materias de este cuatrimestre
         </h2>
-        <div class="dashboard__grid">
-          <ion-card class="stat-card">
-            <ion-card-header>
-              <div class="stat-card__icon" aria-hidden="true">
-                <ion-icon name="book-outline"></ion-icon>
-              </div>
-              <ion-card-title>Materias</ion-card-title>
-              <ion-card-subtitle>Total registradas</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-              <span class="stat-card__value">{{ p.stats.totalSubjects }}</span>
-            </ion-card-content>
-          </ion-card>
-
-          <ion-card class="stat-card stat-card--ok">
-            <ion-card-header>
-              <div class="stat-card__icon" aria-hidden="true">
-                <ion-icon name="checkmark-circle-outline"></ion-icon>
-              </div>
-              <ion-card-title>Aprobadas</ion-card-title>
-              <ion-card-subtitle>Cursadas aprobadas</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-              <span class="stat-card__value">{{
-                p.stats.approvedSubjects
-              }}</span>
-            </ion-card-content>
-          </ion-card>
-
-          <ion-card class="stat-card stat-card--bad">
-            <ion-card-header>
-              <div class="stat-card__icon" aria-hidden="true">
-                <ion-icon name="close-circle-outline"></ion-icon>
-              </div>
-              <ion-card-title>Reprobadas</ion-card-title>
-              <ion-card-subtitle>Cursadas reprobadas</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-              <span class="stat-card__value">{{ p.stats.failedSubjects }}</span>
-            </ion-card-content>
-          </ion-card>
-
-          <ion-card class="stat-card stat-card--tasks">
-            <ion-card-header>
-              <div class="stat-card__icon" aria-hidden="true">
-                <ion-icon name="list-outline"></ion-icon>
-              </div>
-              <ion-card-title>Tareas pendientes</ion-card-title>
-              <ion-card-subtitle>Por hacer o sin completar</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-              <span class="stat-card__value">{{ p.stats.pendingTasks }}</span>
-            </ion-card-content>
-          </ion-card>
-        </div>
+        @if (p.quarterSectionSubtitle) {
+          <p class="dashboard-section__subtitle">{{ p.quarterSectionSubtitle }}</p>
+        }
+        @if (p.quarterSubjects.length === 0) {
+          <p class="dashboard-empty">
+            No hay materias inscritas que coincidan con tu cuatrimestre actual,
+            o aún no has cargado ninguna. Puedes añadirlas desde la pestaña
+            Materias.
+          </p>
+        } @else {
+          <ion-list class="dashboard-quarter-list" lines="full">
+            @for (row of p.quarterSubjects; track row.id) {
+              <ion-item class="dashboard-quarter-item" lines="full">
+                <ion-label>
+                  <h3 class="dashboard-quarter-item__name">{{ row.name }}</h3>
+                  @if (row.courseDetailLine) {
+                    <p class="dashboard-quarter-item__course">
+                      {{ row.courseDetailLine }}
+                    </p>
+                  }
+                  <div class="dashboard-quarter-item__schedules">
+                    <span class="dashboard-quarter-item__schedules-label"
+                      >Horario</span
+                    >
+                    @if (row.scheduleLines.length === 0) {
+                      <p class="dashboard-quarter-item__schedule-line">
+                        Horario a confirmar
+                      </p>
+                    } @else {
+                      @for (line of row.scheduleLines; track $index) {
+                        <p class="dashboard-quarter-item__schedule-line">
+                          {{ line }}
+                        </p>
+                      }
+                    }
+                  </div>
+                  <p class="dashboard-quarter-item__meta">
+                    {{ row.modalityLabel }} · {{ row.credits }} créd. · Cuatri.
+                    acad. {{ row.semesterNumber }}
+                  </p>
+                </ion-label>
+              </ion-item>
+            }
+          </ion-list>
+        }
       </section>
     }
   </div>
