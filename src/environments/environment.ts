@@ -4,6 +4,10 @@
 
 export const environment = {
   production: false,
+  /**
+   * Origen del backend (sin `/` final).
+   * Auth: POST `{apiUrl}/auth/login` y POST `{apiUrl}/auth/register`
+   */
   apiUrl: 'http://localhost:3000',
 };
 

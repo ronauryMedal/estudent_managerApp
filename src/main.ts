@@ -3,6 +3,7 @@ import { RouteReuseStrategy, provideRouter, withPreloading, PreloadAllModules } 
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular/standalone';
 
+import { apiAuthInterceptor } from './app/core/interceptors/api-auth.interceptor';
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 
@@ -11,6 +12,6 @@ bootstrapApplication(AppComponent, {
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
     provideRouter(routes, withPreloading(PreloadAllModules)),
-    provideHttpClient(withInterceptors([])),
+    provideHttpClient(withInterceptors([apiAuthInterceptor])),
   ],
 });

@@ -3,6 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY, apiOrigin } from '../auth-storage';
 import {
   AuthResponse,
   LoginRequest,
@@ -10,13 +11,11 @@ import {
   User,
 } from '../models';
 
-const TOKEN_KEY = 'sm.access_token';
-const USER_KEY = 'sm.user';
-
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/auth`;
+  /** Base `…/auth` → login `POST …/auth/login`, register `POST …/auth/register` */
+  private readonly authBaseUrl = `${apiOrigin(environment.apiUrl)}/auth`;
 
   private readonly _accessToken = signal<string | null>(null);
   private readonly _currentUser = signal<User | null>(null);
@@ -31,21 +30,21 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>(`${this.baseUrl}/login`, credentials)
+      .post<AuthResponse>(`${this.authBaseUrl}/login`, credentials)
       .pipe(tap((response) => this.persistSession(response)));
   }
 
   register(data: RegisterRequest): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>(`${this.baseUrl}/register`, data)
+      .post<AuthResponse>(`${this.authBaseUrl}/register`, data)
       .pipe(tap((response) => this.persistSession(response)));
   }
 
   logout(): void {
     this._accessToken.set(null);
     this._currentUser.set(null);
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_USER_KEY);
   }
 
   getToken(): string | null {
@@ -55,13 +54,13 @@ export class AuthService {
   private persistSession(response: AuthResponse): void {
     this._accessToken.set(response.access_token);
     this._currentUser.set(response.user);
-    localStorage.setItem(TOKEN_KEY, response.access_token);
-    localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+    localStorage.setItem(AUTH_TOKEN_KEY, response.access_token);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(response.user));
   }
 
   private restoreSessionFromStorage(): void {
-    const token = localStorage.getItem(TOKEN_KEY);
-    const rawUser = localStorage.getItem(USER_KEY);
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const rawUser = localStorage.getItem(AUTH_USER_KEY);
 
     if (!token || !rawUser) {
       return;
