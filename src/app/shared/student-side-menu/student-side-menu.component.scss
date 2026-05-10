@@ -1,0 +1,104 @@
+.side-menu-content {
+  --background: var(--ion-background-color, #fff);
+}
+
+.side-menu-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.side-menu-profile {
+  padding: 1.25rem 1rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.side-menu-profile--empty {
+  padding: 2rem 1rem;
+}
+
+.side-menu-profile__avatar {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 0.75rem;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+}
+
+.side-menu-profile__avatar img {
+  object-fit: cover;
+}
+
+.side-menu-profile__initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ion-color-dark, #222428);
+  background: var(--ion-color-light, #f4f5f8);
+}
+
+.side-menu-profile__placeholder-icon {
+  font-size: 4rem;
+  color: var(--ion-color-medium, #92949c);
+  margin-bottom: 0.5rem;
+}
+
+.side-menu-profile__name {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ion-text-color, #1e1e1e);
+}
+
+.side-menu-profile__email {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  color: var(--ion-color-medium-shade, #616161);
+  word-break: break-word;
+}
+
+.side-menu-profile__role {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ion-color-medium, #92949c);
+}
+
+.side-menu-list {
+  padding-top: 0.5rem;
+  background: transparent;
+}
+
+.side-menu-list ion-item {
+  --padding-start: 1rem;
+  --min-height: 48px;
+  font-weight: 500;
+}
+
+.side-menu-list ion-icon {
+  color: var(--ion-color-dark, #222428);
+  margin-inline-end: 0.25rem;
+}
+
+.side-menu-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.side-menu-footer ion-list {
+  background: transparent;
+}
+
+.side-menu-footer ion-item {
+  --padding-start: 1rem;
+  --min-height: 48px;
+}

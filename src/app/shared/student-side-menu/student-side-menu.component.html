@@ -1,0 +1,72 @@
+<ion-menu
+  menuId="student-menu"
+  contentId="main-content"
+  side="start"
+  type="overlay"
+  swipeGesture="true"
+>
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Cuenta</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content class="side-menu-content">
+    <div class="side-menu-inner">
+    @if (auth.currentUser(); as user) {
+      <div class="side-menu-profile">
+        <ion-avatar class="side-menu-profile__avatar" aria-hidden="true">
+          @if (user.avatarUrl) {
+            <img [src]="user.avatarUrl" [alt]="'Avatar de ' + user.name" />
+          } @else {
+            <span class="side-menu-profile__initials">{{ initials() }}</span>
+          }
+        </ion-avatar>
+        <h2 class="side-menu-profile__name">{{ user.name }}</h2>
+        <p class="side-menu-profile__email">{{ user.email }}</p>
+        @if (user.role) {
+          <p class="side-menu-profile__role">{{ user.role }}</p>
+        }
+      </div>
+    } @else {
+      <div class="side-menu-profile side-menu-profile--empty">
+        <ion-icon name="person-circle-outline" class="side-menu-profile__placeholder-icon">
+        </ion-icon>
+        <p class="side-menu-profile__email">Sesión no disponible</p>
+      </div>
+    }
+
+    <ion-list class="side-menu-list" lines="none">
+      <ion-item button detail="false" (click)="go('/tabs/tab1')">
+        <ion-icon slot="start" name="home-outline" aria-hidden="true"></ion-icon>
+        <ion-label>Inicio</ion-label>
+      </ion-item>
+      <ion-item button detail="false" (click)="go('/tabs/tab2')">
+        <ion-icon
+          slot="start"
+          name="clipboard-outline"
+          aria-hidden="true"
+        ></ion-icon>
+        <ion-label>Tareas</ion-label>
+      </ion-item>
+      <ion-item button detail="false" (click)="go('/tabs/tab3')">
+        <ion-icon
+          slot="start"
+          name="library-outline"
+          aria-hidden="true"
+        ></ion-icon>
+        <ion-label>Materias</ion-label>
+      </ion-item>
+    </ion-list>
+
+    <div class="side-menu-footer">
+      <ion-list lines="none">
+        <ion-item button detail="false" (click)="logout()">
+          <ion-icon slot="start" name="log-out-outline" aria-hidden="true"></ion-icon>
+          <ion-label color="danger">Cerrar sesión</ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+    </div>
+  </ion-content>
+</ion-menu>

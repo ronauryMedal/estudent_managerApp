@@ -37,12 +37,14 @@ import { StudentDashboardPayload } from '../core/models/student-dashboard.model'
 import { AuthService } from '../core/services/auth.service';
 import { StudentDashboardService } from '../core/services/student-dashboard.service';
 import { userCareerContextLine } from '../core/utils/user-career-context';
+import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
 
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
   imports: [
+    StudentMenuButtonsComponent,
     RouterLink,
     IonHeader,
     IonToolbar,
