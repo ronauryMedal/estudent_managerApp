@@ -1,17 +1,180 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Tab 1
-    </ion-title>
+    <ion-title>Inicio</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
+      <ion-title size="large">Inicio</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+  <ion-refresher slot="fixed" (ionRefresh)="reload($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="dashboard">
+    @if (auth.currentUser()) {
+      <header class="dashboard-hero">
+        <h1 class="dashboard-hero__title">
+          @if (firstName()) {
+            Hola, {{ firstName() }}
+          } @else {
+            Hola
+          }
+        </h1>
+        @if (contextLine()) {
+          <p class="dashboard-hero__context">{{ contextLine() }}</p>
+        }
+      </header>
+    }
+
+    @if (loading() && !payload()) {
+      <div class="dashboard__state dashboard__state--compact">
+        <ion-spinner name="crescent" color="dark"></ion-spinner>
+        <p>Cargando tu resumen…</p>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="dashboard__state dashboard__state--error">
+        <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+        <p>{{ errorMessage() }}</p>
+        <ion-button fill="outline" color="dark" (click)="reload()">
+          Reintentar
+        </ion-button>
+      </div>
+    }
+
+    @if (payload(); as p) {
+      <section class="dashboard-section" aria-labelledby="upcoming-heading">
+        <h2 id="upcoming-heading" class="dashboard-section__title">
+          Próximas entregas
+        </h2>
+        @if (p.upcomingTasks.length === 0) {
+          <p class="dashboard-empty">
+            No tienes entregas próximas en la lista. Es un buen momento para
+            adelantar trabajo o revisar el tab de tareas.
+          </p>
+        } @else {
+          <ion-list class="dashboard-task-list" lines="full">
+            @for (task of p.upcomingTasks; track task.id) {
+              <ion-item class="dashboard-task-item" lines="full">
+                <ion-label>
+                  <h3 class="dashboard-task-item__title">{{ task.title }}</h3>
+                  <p class="dashboard-task-item__meta">
+                    {{ formatDueDateTime(task.dueDate) }}
+                  </p>
+                </ion-label>
+                <ion-note slot="end" [color]="dueNoteColor(task.dueDate)">
+                  {{ dueRelativeLabel(task.dueDate) }}
+                </ion-note>
+              </ion-item>
+            }
+          </ion-list>
+        }
+      </section>
+
+      <section class="dashboard-section" aria-label="Accesos rápidos">
+        <h2 class="dashboard-section__title">Siguiente paso</h2>
+        <div class="dashboard-quick">
+          <ion-button
+            class="dashboard-quick__btn"
+            expand="block"
+            fill="solid"
+            color="dark"
+            routerLink="/tabs/tab2"
+          >
+            <ion-icon slot="start" name="clipboard-outline" aria-hidden="true">
+            </ion-icon>
+            Ver tareas
+            <ion-icon
+              slot="end"
+              name="chevron-forward-outline"
+              aria-hidden="true"
+            ></ion-icon>
+          </ion-button>
+          <ion-button
+            class="dashboard-quick__btn"
+            expand="block"
+            fill="outline"
+            color="dark"
+            routerLink="/tabs/tab3"
+          >
+            <ion-icon slot="start" name="library-outline" aria-hidden="true">
+            </ion-icon>
+            Mis materias
+            <ion-icon
+              slot="end"
+              name="chevron-forward-outline"
+              aria-hidden="true"
+            ></ion-icon>
+          </ion-button>
+        </div>
+      </section>
+
+      <section class="dashboard-section" aria-labelledby="stats-heading">
+        <h2 id="stats-heading" class="dashboard-section__title">
+          Resumen académico
+        </h2>
+        <div class="dashboard__grid">
+          <ion-card class="stat-card">
+            <ion-card-header>
+              <div class="stat-card__icon" aria-hidden="true">
+                <ion-icon name="book-outline"></ion-icon>
+              </div>
+              <ion-card-title>Materias</ion-card-title>
+              <ion-card-subtitle>Total registradas</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content>
+              <span class="stat-card__value">{{ p.stats.totalSubjects }}</span>
+            </ion-card-content>
+          </ion-card>
+
+          <ion-card class="stat-card stat-card--ok">
+            <ion-card-header>
+              <div class="stat-card__icon" aria-hidden="true">
+                <ion-icon name="checkmark-circle-outline"></ion-icon>
+              </div>
+              <ion-card-title>Aprobadas</ion-card-title>
+              <ion-card-subtitle>Cursadas aprobadas</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content>
+              <span class="stat-card__value">{{
+                p.stats.approvedSubjects
+              }}</span>
+            </ion-card-content>
+          </ion-card>
+
+          <ion-card class="stat-card stat-card--bad">
+            <ion-card-header>
+              <div class="stat-card__icon" aria-hidden="true">
+                <ion-icon name="close-circle-outline"></ion-icon>
+              </div>
+              <ion-card-title>Reprobadas</ion-card-title>
+              <ion-card-subtitle>Cursadas reprobadas</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content>
+              <span class="stat-card__value">{{ p.stats.failedSubjects }}</span>
+            </ion-card-content>
+          </ion-card>
+
+          <ion-card class="stat-card stat-card--tasks">
+            <ion-card-header>
+              <div class="stat-card__icon" aria-hidden="true">
+                <ion-icon name="list-outline"></ion-icon>
+              </div>
+              <ion-card-title>Tareas pendientes</ion-card-title>
+              <ion-card-subtitle>Por hacer o sin completar</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content>
+              <span class="stat-card__value">{{ p.stats.pendingTasks }}</span>
+            </ion-card-content>
+          </ion-card>
+        </div>
+      </section>
+    }
+  </div>
 </ion-content>

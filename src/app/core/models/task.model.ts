@@ -5,6 +5,8 @@ export interface Task {
   title: string;
   description?: string;
   dueDate: string;
+  /** Si el backend lo envía; si no existe, las tareas se consideran pendientes. */
+  completed?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

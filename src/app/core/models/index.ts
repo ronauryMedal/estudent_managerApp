@@ -8,3 +8,4 @@ export * from './user-career.model';
 export * from './user-semester.model';
 export * from './task.model';
 export * from './user-approved-subject.model';
+export * from './student-dashboard.model';
