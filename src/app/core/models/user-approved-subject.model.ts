@@ -12,3 +12,8 @@ export type CreateUserApprovedSubjectRequest = Omit<
   'id' | 'createdAt' | 'updatedAt'
 >;
 export type UpdateUserApprovedSubjectRequest = Partial<CreateUserApprovedSubjectRequest>;
+
+/** Body de `POST /user-approved-subjects/me` (estudiante). */
+export interface AddMySubjectRequest {
+  subjectId: string;
+}

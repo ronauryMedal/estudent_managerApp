@@ -1,0 +1,173 @@
+<ion-content [fullscreen]="true" class="setup-ion-content">
+  <div class="setup-container">
+    <div class="header-section">
+      <div class="logo-placeholder" aria-hidden="true"></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section__inner">
+        <h1 class="form-section__title">Tu carrera o curso</h1>
+        <p class="setup-intro" id="setup-intro-text">
+          Para usar la app necesitás crear al menos un plan propio (carrera o
+          curso). Podés dejar créditos en 0 si no aplica y usar un solo
+          cuatrimestre si es un curso corto.
+        </p>
+
+        @if (errorMessage(); as err) {
+          <p class="setup-alert" role="alert">{{ err }}</p>
+        }
+
+        <form
+          [formGroup]="form"
+          (ngSubmit)="submit()"
+          novalidate
+          aria-describedby="setup-intro-text"
+        >
+          <div class="input-field">
+            <label class="input-field__label" for="setup-name">Nombre</label>
+            <div class="input-field__shell">
+              <ion-input
+                id="setup-name"
+                class="setup-ion-input"
+                formControlName="name"
+                type="text"
+                autocomplete="organization-title"
+                placeholder="Ej. Ingeniería en Software"
+              ></ion-input>
+            </div>
+            @if (showError('name')) {
+              <p class="field-error" role="alert">Indicá un nombre (mín. 2 caracteres).</p>
+            }
+          </div>
+
+          <div class="input-field">
+            <label class="input-field__label" for="setup-institution"
+              >Institución</label
+            >
+            <div class="input-field__shell">
+              <ion-input
+                id="setup-institution"
+                class="setup-ion-input"
+                formControlName="institution"
+                type="text"
+                autocomplete="organization"
+                placeholder="Ej. Universidad / plataforma"
+              ></ion-input>
+            </div>
+            @if (showError('institution')) {
+              <p class="field-error" role="alert">La institución es obligatoria.</p>
+            }
+          </div>
+
+          <div class="input-field">
+            <label class="input-field__label" for="setup-desc"
+              >Descripción (opcional)</label
+            >
+            <div class="input-field__shell input-field__shell--textarea">
+              <ion-textarea
+                id="setup-desc"
+                class="setup-ion-textarea"
+                formControlName="description"
+                rows="3"
+                placeholder="Resumen breve del plan"
+              ></ion-textarea>
+            </div>
+          </div>
+
+          <div class="input-field input-field--row">
+            <div class="input-field--half">
+              <label class="input-field__label" for="setup-credits"
+                >Créditos totales</label
+              >
+            <div class="input-field__shell">
+              <ion-input
+                id="setup-credits"
+                class="setup-ion-input"
+                formControlName="totalCredits"
+                type="number"
+                inputmode="numeric"
+                aria-describedby="setup-credits-hint"
+              ></ion-input>
+            </div>
+              <p class="field-hint" id="setup-credits-hint">
+                0 = no llevo control de créditos
+              </p>
+              @if (showNumberError('totalCredits')) {
+                <p class="field-error" role="alert">Número ≥ 0.</p>
+              }
+            </div>
+            <div class="input-field--half">
+              <label class="input-field__label" for="setup-semesters"
+                >Cuatrimestres del plan</label
+              >
+              <div class="input-field__shell">
+                <ion-input
+                  id="setup-semesters"
+                  class="setup-ion-input"
+                  formControlName="totalSemester"
+                  type="number"
+                  inputmode="numeric"
+                  (ionBlur)="onTotalSemesterBlur()"
+                ></ion-input>
+              </div>
+              @if (showNumberError('totalSemester')) {
+                <p class="field-error" role="alert">Al menos 1.</p>
+              }
+            </div>
+          </div>
+
+          <div class="input-field">
+            <label class="input-field__label" for="setup-current"
+              >Cuatrimestre en el que estás ahora</label
+            >
+            <div class="input-field__shell">
+              <ion-input
+                id="setup-current"
+                class="setup-ion-input"
+                formControlName="currentSemester"
+                type="number"
+                inputmode="numeric"
+                aria-describedby="setup-current-hint"
+                (ionBlur)="onCurrentSemesterBlur()"
+              ></ion-input>
+            </div>
+            <p class="field-hint" id="setup-current-hint">
+              No puede ser mayor que los cuatrimestres del plan (máx.
+              {{ effectivePlanQuarters() }}).
+            </p>
+            @if (showNumberError('currentSemester')) {
+              <p class="field-error" role="alert">
+                Entre 1 y {{ effectivePlanQuarters() }} (cuatrimestres del plan).
+              </p>
+            }
+          </div>
+
+          <ion-button
+            expand="block"
+            type="submit"
+            class="setup-button"
+            [disabled]="submitting()"
+          >
+            @if (submitting()) {
+              <ion-spinner name="crescent" color="light"></ion-spinner>
+            } @else {
+              Crear y continuar
+            }
+          </ion-button>
+        </form>
+
+        <ion-button
+          expand="block"
+          fill="clear"
+          color="medium"
+          class="setup-logout"
+          type="button"
+          [disabled]="submitting()"
+          (click)="logout()"
+        >
+          Cerrar sesión
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>

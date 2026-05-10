@@ -13,6 +13,9 @@ export interface Subject {
   id: string;
   name: string;
   credits: number;
+  /** Número de cuatrimestre en el plan (API nueva). */
+  quarterNumber?: number;
+  /** Alias histórico si el backend aún lo envía. */
   semesterNumber: number;
   careerId: string;
   modality?: SubjectModality;
@@ -36,3 +39,15 @@ export type CreateSubjectRequest = Omit<
   'id' | 'createdAt' | 'updatedAt' | 'schedules'
 >;
 export type UpdateSubjectRequest = Partial<CreateSubjectRequest>;
+
+/** `POST /subjects/me` — `careerId` debe ser una carrera creada por el estudiante (`GET /careers/me`). */
+export interface CreateMySubjectRequest {
+  careerId: string;
+  quarterNumber: number;
+  name: string;
+  credits: number;
+  modality?: SubjectModality;
+  building?: string | null;
+  section?: string | null;
+  courseNumber?: string | null;
+}

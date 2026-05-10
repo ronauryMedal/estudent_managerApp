@@ -1,0 +1,118 @@
+.subjects-page {
+  padding: 0 0 1.25rem;
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.subjects-segment {
+  margin: 0.5rem 1rem 0.75rem;
+  --background: var(--ion-color-light, #f4f5f8);
+}
+
+.subjects-segment ion-icon {
+  margin-bottom: 2px;
+}
+
+.subjects-hint {
+  margin: 0 1rem 0.75rem;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ion-color-medium-shade, #616161);
+  background: var(--ion-color-light, #f4f5f8);
+  border-radius: 10px;
+}
+
+.subjects-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--ion-color-medium, #92949c);
+
+  p {
+    margin: 0;
+    max-width: 280px;
+  }
+}
+
+.subjects-state--error {
+  color: var(--ion-color-danger-shade, #cf3c4f);
+}
+
+.subjects-empty {
+  margin: 1.25rem 1rem;
+  padding: 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ion-color-medium-shade, #616161);
+  background: var(--ion-color-light, #f4f5f8);
+  border-radius: 12px;
+}
+
+.subjects-list {
+  margin: 0;
+  padding: 0 0.5rem;
+  background: transparent;
+}
+
+.subjects-item__title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ion-text-color, #1e1e1e);
+}
+
+.subjects-item__meta {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ion-color-medium, #92949c);
+}
+
+.subjects-item__chev {
+  color: var(--ion-color-medium, #92949c);
+  font-size: 1.25rem;
+}
+
+.subjects-item ion-button[slot='end'] {
+  margin-inline-start: 0.5rem;
+  --padding-start: 12px;
+  --padding-end: 12px;
+}
+
+.subject-detail__line {
+  margin: 0 0 0.65rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ion-text-color, #1e1e1e);
+}
+
+.subject-detail__h {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ion-color-medium, #92949c);
+}
+
+.subject-detail__muted {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--ion-color-medium, #92949c);
+}
+
+.subject-detail__sched {
+  margin: 0 0 1rem;
+  padding-left: 1.15rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ion-text-color, #1e1e1e);
+}
+
+.subject-detail__actions {
+  margin-top: 1.25rem;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}

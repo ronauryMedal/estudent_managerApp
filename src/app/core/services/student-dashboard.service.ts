@@ -14,6 +14,7 @@ import {
   SubjectModality,
   SUBJECT_MODALITY_LABELS,
 } from '../models/subject.model';
+import { subjectPlanQuarter } from '../utils/subject-quarter';
 import { Task } from '../models/task.model';
 import { User } from '../models/user.model';
 import { UserApprovedSubject } from '../models/user-approved-subject.model';
@@ -56,18 +57,18 @@ export class StudentDashboardService {
       approved: this.http
         .get<ApprovedMine[]>(`${this.apiBase}/user-approved-subjects/me`)
         .pipe(catchError(() => of([] as ApprovedMine[]))),
-      subjects: this.http
-        .get<Subject[]>(`${this.apiBase}/subjects`)
+      planSubjects: this.http
+        .get<Subject[]>(`${this.apiBase}/subjects/me`)
         .pipe(catchError(() => of([] as Subject[]))),
       myCareer: this.http
         .get<UserCareer>(`${this.apiBase}/user-careers/me`)
         .pipe(catchError(() => of(null))),
     }).pipe(
-      map(({ tasks, approved, subjects, myCareer }) => {
+      map(({ tasks, approved, planSubjects, myCareer }) => {
         const refs = studentAcademicRefs(user, myCareer);
         const quarterSubjects = this.buildQuarterSubjectRows(
           approved,
-          subjects,
+          planSubjects,
           refs,
         );
         const quarterSectionSubtitle =
@@ -86,11 +87,11 @@ export class StudentDashboardService {
 
   private buildQuarterSubjectRows(
     approved: ApprovedMine[],
-    catalog: Subject[],
+    planSubjects: Subject[],
     refs: ReturnType<typeof studentAcademicRefs>,
   ): QuarterSubjectRow[] {
     const byId = new Map<string, Subject>();
-    for (const s of catalog) {
+    for (const s of planSubjects) {
       byId.set(s.id, s);
     }
     for (const a of approved) {
@@ -119,7 +120,7 @@ export class StudentDashboardService {
         return false;
       }
       if (refs.currentSemester != null) {
-        return sub.semesterNumber === refs.currentSemester;
+        return subjectPlanQuarter(sub) === refs.currentSemester;
       }
       return true;
     };
@@ -144,7 +145,7 @@ export class StudentDashboardService {
       id: sub.id,
       name: sub.name,
       credits: sub.credits,
-      semesterNumber: sub.semesterNumber,
+      semesterNumber: subjectPlanQuarter(sub),
       modalityLabel,
       scheduleLines: subjectScheduleLines(sub),
       courseDetailLine: subjectCourseDetailLine(sub),

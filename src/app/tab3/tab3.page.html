@@ -2,6 +2,15 @@
   <ion-toolbar>
     <app-student-menu-buttons />
     <ion-title>Materias</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        fill="clear"
+        aria-label="Nueva materia"
+        (click)="openCreateModal()"
+      >
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -10,8 +19,345 @@
     <ion-toolbar>
       <app-student-menu-buttons />
       <ion-title size="large">Materias</ion-title>
+      <ion-buttons slot="end">
+        <ion-button
+          fill="clear"
+          aria-label="Nueva materia"
+          (click)="openCreateModal()"
+        >
+          <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
     </ion-toolbar>
   </ion-header>
 
-  <app-explore-container name="Tab 3 page"></app-explore-container>
+  <ion-refresher slot="fixed" (ionRefresh)="reload($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="subjects-page">
+    <ion-segment
+      class="subjects-segment"
+      [value]="segment()"
+      (ionChange)="segmentChange($event)"
+    >
+      <ion-segment-button value="plan">
+        <ion-icon name="book-outline" aria-hidden="true"></ion-icon>
+        <ion-label>Mi plan</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="approved">
+        <ion-icon name="school-outline" aria-hidden="true"></ion-icon>
+        <ion-label>Avance</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    @if (academicRefs(); as refs) {
+      <p class="subjects-hint">
+        El <strong>plan</strong> son las materias que das de alta con
+        <strong>Nueva materia</strong> en carreras creadas por ti
+        (<code>/careers/me</code>). En <strong>Avance</strong> aparecen las
+        registradas con <code>/user-approved-subjects/me</code>.
+        @if (refs.careerId && refs.currentSemester != null) {
+          Tu inscripción académica indica cuatrimestre n.º
+          {{ refs.currentSemester }}.
+        }
+      </p>
+    }
+
+    @if (
+      loading() &&
+      planSubjects().length === 0 &&
+      enrolledRows().length === 0
+    ) {
+      <div class="subjects-state">
+        <ion-spinner name="crescent" color="dark"></ion-spinner>
+        <p>Cargando materias…</p>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="subjects-state subjects-state--error">
+        <p>{{ errorMessage() }}</p>
+        <ion-button fill="outline" color="dark" (click)="reload()">
+          Reintentar
+        </ion-button>
+      </div>
+    }
+
+    @if (segment() === 'plan') {
+      @if (planSubjects().length === 0 && !loading()) {
+        <p class="subjects-empty">
+          Aún no tienes materias en tu plan. Pulsa el botón
+          <strong>+</strong> para crear una (necesitas al menos una carrera en
+          <code>/careers/me</code>).
+        </p>
+      } @else {
+        <ion-list class="subjects-list" lines="full">
+          @for (sub of planSubjects(); track sub.id) {
+            <ion-item
+              class="subjects-item"
+              button
+              detail="false"
+              (click)="openDetail(sub, null)"
+            >
+              <ion-label>
+                <h2 class="subjects-item__title">{{ sub.name }}</h2>
+                <p class="subjects-item__meta">
+                  {{ careerLabel(sub.careerId) }} · {{ modalityLabel(sub) }} ·
+                  {{ sub.credits }} créd. · Cuatri. plan
+                  {{ planQuarter(sub) }}
+                </p>
+              </ion-label>
+              <ion-icon
+                slot="end"
+                name="chevron-forward-outline"
+                class="subjects-item__chev"
+                aria-hidden="true"
+              ></ion-icon>
+            </ion-item>
+          }
+        </ion-list>
+      }
+    }
+
+    @if (segment() === 'approved') {
+      @if (enrolledRows().length === 0 && !loading()) {
+        <p class="subjects-empty">
+          No hay materias en tu avance. Desde <strong>Mi plan</strong> abre una
+          materia y usa <strong>Añadir a mi avance</strong>, o registra la
+          inscripción vía API.
+        </p>
+      } @else {
+        <ion-list class="subjects-list" lines="full">
+          @for (row of enrolledRows(); track row.enrollment.id) {
+            <ion-item
+              class="subjects-item"
+              button
+              detail="false"
+              (click)="openDetail(row.subject, row.enrollment)"
+            >
+              <ion-label>
+                <h2 class="subjects-item__title">{{ row.subject.name }}</h2>
+                <p class="subjects-item__meta">
+                  {{ modalityLabel(row.subject) }} ·
+                  {{ row.subject.credits }} créd. · Cuatri. plan
+                  {{ planQuarter(row.subject) }}
+                </p>
+              </ion-label>
+              <ion-icon
+                slot="end"
+                name="chevron-forward-outline"
+                class="subjects-item__chev"
+                aria-hidden="true"
+              ></ion-icon>
+            </ion-item>
+          }
+        </ion-list>
+      }
+    }
+  </div>
 </ion-content>
+
+<ion-modal [isOpen]="createOpen()" (didDismiss)="closeCreateModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Nueva materia</ion-title>
+        <ion-buttons slot="end">
+          <ion-button fill="clear" (click)="closeCreateModal()">
+            Cerrar
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <form [formGroup]="createForm" (ngSubmit)="submitCreate()">
+        <ion-list lines="full">
+          <ion-item>
+            <ion-select
+              label="Carrera (tu plan)"
+              labelPlacement="stacked"
+              formControlName="careerId"
+              interface="popover"
+              placeholder="Elegí una carrera"
+            >
+              @for (c of myCareersList(); track c.id) {
+                <ion-select-option [value]="c.id">{{ c.name }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              label="Cuatrimestre en el plan"
+              labelPlacement="stacked"
+              type="number"
+              inputmode="numeric"
+              formControlName="quarterNumber"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              label="Nombre"
+              labelPlacement="stacked"
+              type="text"
+              formControlName="name"
+              autocomplete="off"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              label="Créditos"
+              labelPlacement="stacked"
+              type="number"
+              inputmode="numeric"
+              formControlName="credits"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-select
+              label="Modalidad"
+              labelPlacement="stacked"
+              formControlName="modality"
+              interface="popover"
+            >
+              <ion-select-option value="VIRTUAL">Virtual</ion-select-option>
+              <ion-select-option value="IN_PERSON">Presencial</ion-select-option>
+              <ion-select-option value="HYBRID">Híbrida</ion-select-option>
+            </ion-select>
+          </ion-item>
+          @if (
+            createForm.get('modality')?.value === 'IN_PERSON' ||
+            createForm.get('modality')?.value === 'HYBRID'
+          ) {
+            <ion-item>
+              <ion-input
+                label="Edificio / aula"
+                labelPlacement="stacked"
+                type="text"
+                formControlName="building"
+              ></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-input
+                label="Sección"
+                labelPlacement="stacked"
+                type="text"
+                formControlName="section"
+              ></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-input
+                label="Código de curso"
+                labelPlacement="stacked"
+                type="text"
+                formControlName="courseNumber"
+              ></ion-input>
+            </ion-item>
+          }
+        </ion-list>
+        <ion-button
+          expand="block"
+          color="dark"
+          type="submit"
+          class="ion-margin-top"
+          [disabled]="createSubmitting()"
+        >
+          @if (createSubmitting()) {
+            <ion-spinner name="crescent" color="light"></ion-spinner>
+          } @else {
+            Guardar
+          }
+        </ion-button>
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="detailSubject() !== null" (didDismiss)="closeDetail()">
+  <ng-template>
+    @if (detailSubject(); as sub) {
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ sub.name }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button fill="clear" (click)="closeDetail()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding subject-detail">
+        @if (courseLine(sub)) {
+          <p class="subject-detail__line">{{ courseLine(sub) }}</p>
+        }
+        <p class="subject-detail__line">
+          <strong>Modalidad:</strong> {{ modalityLabel(sub) }}
+        </p>
+        <p class="subject-detail__line">
+          <strong>Créditos:</strong> {{ sub.credits }} ·
+          <strong>Cuatrimestre (plan):</strong>
+          {{ planQuarter(sub) }}
+        </p>
+        <p class="subject-detail__line">
+          <strong>Carrera:</strong> {{ careerLabel(sub.careerId) }}
+        </p>
+        @if (detailEnrollment(); as en) {
+          <p class="subject-detail__line">
+            <strong>En avance desde:</strong>
+            {{ formatApprovedAt(en.approvedAt) }}
+          </p>
+        }
+
+        <h3 class="subject-detail__h">Horario</h3>
+        @if (scheduleLines(sub).length === 0) {
+          <p class="subject-detail__muted">Horario a confirmar</p>
+        } @else {
+          <ul class="subject-detail__sched">
+            @for (line of scheduleLines(sub); track $index) {
+              <li>{{ line }}</li>
+            }
+          </ul>
+        }
+
+        <div class="subject-detail__actions">
+          @if (detailEnrollment(); as en) {
+            <ion-button
+              expand="block"
+              color="danger"
+              fill="outline"
+              [disabled]="actionBusyId() === en.id"
+              (click)="confirmUnenroll({ enrollment: en, subject: sub })"
+            >
+              @if (actionBusyId() === en.id) {
+                <ion-spinner name="crescent" color="danger"></ion-spinner>
+              } @else {
+                <ion-icon
+                  slot="start"
+                  name="trash-outline"
+                  aria-hidden="true"
+                ></ion-icon>
+                Quitar del avance
+              }
+            </ion-button>
+          } @else {
+            <ion-button
+              expand="block"
+              color="dark"
+              [disabled]="actionBusyId() === sub.id"
+              (click)="enrollSubject(sub.id)"
+            >
+              @if (actionBusyId() === sub.id) {
+                <ion-spinner name="crescent" color="light"></ion-spinner>
+              } @else {
+                <ion-icon
+                  slot="start"
+                  name="add-circle-outline"
+                  aria-hidden="true"
+                ></ion-icon>
+                Añadir a mi avance
+              }
+            </ion-button>
+          }
+        </div>
+      </ion-content>
+    }
+  </ng-template>
+</ion-modal>
