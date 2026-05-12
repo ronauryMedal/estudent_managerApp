@@ -19,7 +19,7 @@ export class StudentCareerService {
       .pipe(catchError(() => of([] as Career[])));
   }
 
-  /** Crea tu carrera o curso (`POST /careers/me`). */
+  /** Crea tu carrera o curso (`POST /careers/me` — ver `docs/frontend-api.md`). */
   createMyCareer(body: CreateMyCareerMeRequest): Observable<Career> {
     return this.http.post<Career>(`${this.apiBase}/careers/me`, body);
   }

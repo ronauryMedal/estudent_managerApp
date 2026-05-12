@@ -12,6 +12,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   IonButton,
   IonContent,
@@ -156,7 +157,27 @@ export class SetupCareerPage implements OnInit {
         next: async () => {
           await this.router.navigateByUrl('/tabs/tab1');
         },
-        error: () => {
+        error: (err: unknown) => {
+          if (err instanceof HttpErrorResponse) {
+            if (err.status === 404) {
+              this.errorMessage.set(
+                'El servidor no tiene el endpoint de creación de carrera (POST /careers/me). Actualizá el backend o la URL en environment.',
+              );
+              return;
+            }
+            if (err.status === 401 || err.status === 403) {
+              this.errorMessage.set(
+                'No tenés permiso para crear el plan o la sesión expiró. Volvé a iniciar sesión.',
+              );
+              return;
+            }
+            if (err.status === 0) {
+              this.errorMessage.set(
+                'No hay conexión con el servidor. Comprobá que la API esté en marcha y la URL en environment.',
+              );
+              return;
+            }
+          }
           this.errorMessage.set(
             'No se pudo guardar. Revisa los datos o tu conexión e inténtalo de nuevo.',
           );
