@@ -19,6 +19,7 @@ import {
   homeOutline,
   libraryOutline,
   logOutOutline,
+  peopleOutline,
   personCircleOutline,
 } from 'ionicons/icons';
 
@@ -58,14 +59,23 @@ export class StudentSideMenuComponent {
       homeOutline,
       clipboardOutline,
       libraryOutline,
+      peopleOutline,
       logOutOutline,
       personCircleOutline,
     });
   }
 
+  isTeachersRoute(): boolean {
+    return this.router.url.includes('/teachers');
+  }
+
   async go(path: string): Promise<void> {
     await this.menuCtrl.close(MENU_ID);
-    await this.router.navigateByUrl(path);
+    const target = path.startsWith('/') ? path : `/${path}`;
+    if (this.router.url === target || this.router.url.startsWith(`${target}?`)) {
+      return;
+    }
+    await this.router.navigateByUrl(target);
   }
 
   async logout(): Promise<void> {

@@ -32,6 +32,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'teachers',
+        canActivate: [studentCareerRequiredGuard],
+        loadComponent: () =>
+          import('./teachers/teachers.page').then((m) => m.TeachersPage),
+      },
+      {
         path: '',
         canActivate: [studentCareerRequiredGuard],
         loadChildren: () =>

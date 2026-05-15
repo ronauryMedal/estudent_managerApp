@@ -1,3 +1,4 @@
+import type { Teacher } from './teacher.model';
 import { SubjectSchedule } from './subject-schedule.model';
 
 /** Modalidad de dictado; el backend usa `IN_PERSON` por defecto si no se envía. */
@@ -30,6 +31,13 @@ export interface Subject {
   schedules?: SubjectSchedule[];
   /** Legado / texto libre si la API lo envía además de `schedules`. */
   scheduleSummary?: string | null;
+  /** Asignaciones profesor–materia (`GET /subjects/me` con include). */
+  teachers?: Array<{
+    id: string;
+    subjectId: string;
+    teacherId: string;
+    teacher?: Teacher;
+  }>;
   createdAt?: string;
   updatedAt?: string;
 }

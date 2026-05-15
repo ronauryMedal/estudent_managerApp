@@ -5,7 +5,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" class="dashboard-ion-content">
   <ion-header collapse="condense">
     <ion-toolbar>
       <app-student-menu-buttons />
@@ -20,16 +20,18 @@
   <div class="dashboard">
     @if (auth.currentUser()) {
       <header class="dashboard-hero">
-        <h1 class="dashboard-hero__title">
-          @if (firstName()) {
-            Hola, {{ firstName() }}
-          } @else {
-            Hola
+        <div class="dashboard-hero__inner">
+          <h1 class="dashboard-hero__title">
+            @if (firstName()) {
+              Hola, {{ firstName() }}
+            } @else {
+              Hola
+            }
+          </h1>
+          @if (contextLine()) {
+            <p class="dashboard-hero__context">{{ contextLine() }}</p>
           }
-        </h1>
-        @if (contextLine()) {
-          <p class="dashboard-hero__context">{{ contextLine() }}</p>
-        }
+        </div>
       </header>
     }
 
@@ -52,126 +54,159 @@
 
     @if (payload(); as p) {
       <section class="dashboard-section" aria-labelledby="upcoming-heading">
-        <h2 id="upcoming-heading" class="dashboard-section__title">
-          Próximas entregas
-        </h2>
-        @if (p.upcomingTasks.length === 0) {
-          <p class="dashboard-empty">
-            No tienes entregas próximas en la lista. Es un buen momento para
-            adelantar trabajo o revisar el tab de tareas.
-          </p>
-        } @else {
-          <ion-list class="dashboard-task-list" lines="full">
-            @for (task of p.upcomingTasks; track task.id) {
-              <ion-item class="dashboard-task-item" lines="full">
-                <ion-label>
-                  <h3 class="dashboard-task-item__title">{{ task.title }}</h3>
-                  <p class="dashboard-task-item__meta">
-                    {{ formatDueDateTime(task.dueDate) }}
-                  </p>
-                </ion-label>
-                <ion-note slot="end" [color]="dueNoteColor(task.dueDate)">
-                  {{ dueRelativeLabel(task.dueDate) }}
-                </ion-note>
-              </ion-item>
-            }
-          </ion-list>
-        }
-      </section>
-
-      <section class="dashboard-section" aria-label="Accesos rápidos">
-        <h2 class="dashboard-section__title">Siguiente paso</h2>
-        <div class="dashboard-quick">
-          <ion-button
-            class="dashboard-quick__btn"
-            expand="block"
-            fill="solid"
-            color="dark"
-            routerLink="/tabs/tab2"
-          >
-            <ion-icon slot="start" name="clipboard-outline" aria-hidden="true">
-            </ion-icon>
-            Ver tareas
-            <ion-icon
-              slot="end"
-              name="chevron-forward-outline"
-              aria-hidden="true"
-            ></ion-icon>
-          </ion-button>
-          <ion-button
-            class="dashboard-quick__btn"
-            expand="block"
-            fill="outline"
-            color="dark"
-            routerLink="/tabs/tab3"
-          >
-            <ion-icon slot="start" name="library-outline" aria-hidden="true">
-            </ion-icon>
-            Mis materias
-            <ion-icon
-              slot="end"
-              name="chevron-forward-outline"
-              aria-hidden="true"
-            ></ion-icon>
-          </ion-button>
+        <div class="dashboard-section-head">
+          <h2 id="upcoming-heading" class="dashboard-section-head__title">
+            <ion-icon name="flag-outline" aria-hidden="true"></ion-icon>
+            Próximas entregas
+          </h2>
+          @if (p.upcomingTasks.length > 0) {
+            <span class="dashboard-section-head__count">{{
+              p.upcomingTasks.length
+            }}</span>
+          }
         </div>
+        @if (p.upcomingTasks.length === 0) {
+          <div class="dashboard-empty-card">
+            <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
+            <p>
+              No tenés entregas pendientes listadas. Podés revisar el tab
+              <strong>Tareas</strong> cuando quieras.
+            </p>
+          </div>
+        } @else {
+          <div class="dashboard-cards dashboard-cards--tasks">
+            @for (task of p.upcomingTasks; track task.id) {
+              <article
+                class="dashboard-task-card"
+                [class.dashboard-task-card--urgent]="isDueUrgent(task.dueDate)"
+              >
+                <div class="dashboard-task-card__body">
+                  <h3 class="dashboard-task-card__title">{{ task.title }}</h3>
+                  <time class="dashboard-task-card__datetime">{{
+                    formatDueDateTime(task.dueDate)
+                  }}</time>
+                </div>
+                <span
+                  class="dashboard-task-card__badge"
+                  [attr.data-tone]="dueTone(task.dueDate)"
+                >
+                  {{ dueRelativeLabel(task.dueDate) }}
+                </span>
+              </article>
+            }
+          </div>
+        }
       </section>
 
       <section class="dashboard-section" aria-labelledby="quarter-heading">
-        <h2 id="quarter-heading" class="dashboard-section__title">
-          <ion-icon
-            class="dashboard-section__title-icon"
-            name="calendar-outline"
-            aria-hidden="true"
-          ></ion-icon>
-          Materias de este cuatrimestre
-        </h2>
+        <div class="dashboard-section-head">
+          <h2 id="quarter-heading" class="dashboard-section-head__title">
+            <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+            Materias de este cuatrimestre
+          </h2>
+        </div>
         @if (p.quarterSectionSubtitle) {
-          <p class="dashboard-section__subtitle">{{ p.quarterSectionSubtitle }}</p>
+          <p class="dashboard-section-lead">{{ p.quarterSectionSubtitle }}</p>
         }
         @if (p.quarterSubjects.length === 0) {
-          <p class="dashboard-empty">
-            No hay materias inscritas que coincidan con tu cuatrimestre actual,
-            o aún no has cargado ninguna. Puedes añadirlas desde la pestaña
-            Materias.
-          </p>
+          <div class="dashboard-empty-card">
+            <ion-icon name="book-outline" aria-hidden="true"></ion-icon>
+            <p>
+              No hay materias para mostrar en este cuatrimestre. Agregalas desde
+              la pestaña <strong>Materias</strong>.
+            </p>
+          </div>
         } @else {
-          <ion-list class="dashboard-quarter-list" lines="full">
+          <div class="dashboard-cards dashboard-cards--subjects">
             @for (row of p.quarterSubjects; track row.id) {
-              <ion-item class="dashboard-quarter-item" lines="full">
-                <ion-label>
-                  <h3 class="dashboard-quarter-item__name">{{ row.name }}</h3>
-                  @if (row.courseDetailLine) {
-                    <p class="dashboard-quarter-item__course">
-                      {{ row.courseDetailLine }}
-                    </p>
-                  }
-                  <div class="dashboard-quarter-item__schedules">
-                    <span class="dashboard-quarter-item__schedules-label"
-                      >Horario</span
-                    >
-                    @if (row.scheduleLines.length === 0) {
-                      <p class="dashboard-quarter-item__schedule-line">
-                        Horario a confirmar
-                      </p>
-                    } @else {
-                      @for (line of row.scheduleLines; track $index) {
-                        <p class="dashboard-quarter-item__schedule-line">
-                          {{ line }}
-                        </p>
-                      }
-                    }
-                  </div>
-                  <p class="dashboard-quarter-item__meta">
-                    {{ row.modalityLabel }} · {{ row.credits }} créd. · Cuatri.
-                    acad. {{ row.semesterNumber }}
+              <article class="dashboard-subject-card">
+                <header class="dashboard-subject-card__header">
+                  <h3 class="dashboard-subject-card__name">{{ row.name }}</h3>
+                  <span class="dashboard-subject-card__chip">{{
+                    row.modalityLabel
+                  }}</span>
+                </header>
+                @if (row.courseDetailLine) {
+                  <p class="dashboard-subject-card__course">
+                    {{ row.courseDetailLine }}
                   </p>
-                </ion-label>
-              </ion-item>
+                }
+                <div class="dashboard-subject-card__schedule-block">
+                  <span class="dashboard-subject-card__label">Horario</span>
+                  @if (row.scheduleLines.length === 0) {
+                    <p class="dashboard-subject-card__schedule-muted">
+                      Horario a confirmar · tocá la materia en
+                      <strong>Materias</strong> para cargar bloques.
+                    </p>
+                  } @else {
+                    <ul class="dashboard-subject-card__schedule-list">
+                      @for (line of row.scheduleLines; track $index) {
+                        <li>{{ line }}</li>
+                      }
+                    </ul>
+                  }
+                </div>
+                <footer class="dashboard-subject-card__footer">
+                  {{ row.credits }} créd. · Cuatrimestre {{ row.semesterNumber }}
+                </footer>
+              </article>
             }
-          </ion-list>
+          </div>
         }
       </section>
     }
   </div>
+
+  <!-- Ayuda: cómo usar la app -->
+  <ion-fab slot="fixed" vertical="bottom" horizontal="start">
+    <ion-fab-button
+      class="dashboard-fab-help"
+      aria-label="Ayuda: qué hacer en la app"
+      (click)="openHelp()"
+    >
+      <ion-icon name="help"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>
+
+<ion-modal [isOpen]="helpOpen()" (didDismiss)="closeHelp()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Cómo usar la app</ion-title>
+        <ion-buttons slot="end">
+          <ion-button fill="clear" (click)="closeHelp()">Cerrar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding dashboard-help-content">
+      <p class="dashboard-help-intro">
+        Este es tu panel de inicio: ves <strong>entregas pendientes</strong> y
+        las <strong>materias del cuatrimestre actual</strong> según tu inscripción.
+      </p>
+      <ol class="dashboard-help-steps">
+        <li>
+          <strong>Materias</strong> (tab inferior): creá materias de tus carreras,
+          enlazá profesores y cargá <strong>horarios</strong> para que aparezcan
+          aquí.
+        </li>
+        <li>
+          <strong>Menú → Profesores</strong>: creá docentes propios (no son
+          cuentas de login) y asignalos desde el detalle de cada materia.
+        </li>
+        <li>
+          <strong>Tareas</strong>: revisá y gestioná lo pendiente; las próximas
+          fechas también se resumen arriba en Inicio.
+        </li>
+        <li>
+          Usá las <strong>pestañas de abajo</strong> (Inicio, Tareas, Materias)
+          para moverte: en cada sección tenés las acciones que necesitás.
+        </li>
+      </ol>
+      <p class="dashboard-help-tip">
+        Tip: si falta horario, abrí la materia en <strong>Materias</strong> y
+        agregá bloques por día y hora.
+      </p>
+    </ion-content>
+  </ng-template>
+</ion-modal>

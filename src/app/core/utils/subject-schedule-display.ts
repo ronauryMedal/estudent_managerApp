@@ -51,7 +51,8 @@ function normWeekday(w: string): string {
   return String(w).toUpperCase();
 }
 
-function formatScheduleBlock(b: SubjectSchedule): string {
+/** Una línea legible para un bloque (ej. "Vie 18:00–20:00 · Lab 2"). */
+export function formatSubjectScheduleBlock(b: SubjectSchedule): string {
   const wk = normWeekday(b.weekday);
   const day = WEEKDAY_LABEL_ES[wk] ?? wk.slice(0, 3);
   const t0 = parseScheduleTimeToHHmm(b.startTime);
@@ -63,21 +64,27 @@ function formatScheduleBlock(b: SubjectSchedule): string {
   return line;
 }
 
+/** Ordena bloques por día de la semana y hora de inicio. */
+export function sortSubjectSchedules(
+  list: SubjectSchedule[],
+): SubjectSchedule[] {
+  return [...list].sort((a, b) => {
+    const da = WEEKDAY_ORDER[normWeekday(a.weekday)] ?? 99;
+    const db = WEEKDAY_ORDER[normWeekday(b.weekday)] ?? 99;
+    if (da !== db) {
+      return da - db;
+    }
+    return parseScheduleTimeToHHmm(a.startTime).localeCompare(
+      parseScheduleTimeToHHmm(b.startTime),
+    );
+  });
+}
+
 /** Líneas listas para mostrar (una por bloque), ordenadas por día y hora de inicio. */
 export function subjectScheduleLines(subject: Subject): string[] {
   const list = subject.schedules;
   if (list?.length) {
-    const sorted = [...list].sort((a, b) => {
-      const da = WEEKDAY_ORDER[normWeekday(a.weekday)] ?? 99;
-      const db = WEEKDAY_ORDER[normWeekday(b.weekday)] ?? 99;
-      if (da !== db) {
-        return da - db;
-      }
-      return parseScheduleTimeToHHmm(a.startTime).localeCompare(
-        parseScheduleTimeToHHmm(b.startTime),
-      );
-    });
-    return sorted.map(formatScheduleBlock);
+    return sortSubjectSchedules(list).map(formatSubjectScheduleBlock);
   }
 
   const row = subject as Subject & Record<string, unknown>;

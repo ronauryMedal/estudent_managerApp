@@ -5,7 +5,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" class="tab2-ion-content">
   <ion-header collapse="condense">
     <ion-toolbar>
       <app-student-menu-buttons />
@@ -13,5 +13,39 @@
     </ion-toolbar>
   </ion-header>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+  <div class="tab2-placeholder ion-padding">
+    <p class="tab2-placeholder__text">
+      Aquí verás el listado y alta de tareas enlazadas a tus materias.
+      Mientras tanto, el mismo botón <strong>+</strong> flotante te permite crear
+      <strong>materias</strong> y <strong>profesores</strong> como en el resto de la app.
+    </p>
+    <app-explore-container name="Tab 2 page"></app-explore-container>
+  </div>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button color="dark" aria-label="Acciones rápidas">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-list side="top">
+      <ion-fab-button
+        color="dark"
+        aria-label="Nueva materia"
+        routerLink="/tabs/tab3"
+        [queryParams]="{ create: '1' }"
+      >
+        <ion-icon name="library-outline"></ion-icon>
+      </ion-fab-button>
+      <ion-fab-button
+        color="dark"
+        aria-label="Nuevo profesor"
+        routerLink="/teachers"
+        [queryParams]="{ create: '1' }"
+      >
+        <ion-icon name="people-outline"></ion-icon>
+      </ion-fab-button>
+      <ion-fab-button color="dark" aria-label="Inicio" routerLink="/tabs/tab1">
+        <ion-icon name="home-outline"></ion-icon>
+      </ion-fab-button>
+    </ion-fab-list>
+  </ion-fab>
 </ion-content>

@@ -20,3 +20,25 @@ export interface SubjectSchedule {
   createdAt?: string;
   updatedAt?: string;
 }
+
+/** Body de `POST /subjects/:subjectId/schedules`. */
+export interface CreateSubjectScheduleRequest {
+  weekday: SubjectScheduleWeekday;
+  /** Formato 24 h `HH:mm`. */
+  startTime: string;
+  endTime: string;
+  room?: string;
+}
+
+export const SUBJECT_SCHEDULE_WEEKDAYS: ReadonlyArray<{
+  value: SubjectScheduleWeekday;
+  label: string;
+}> = [
+  { value: 'MONDAY', label: 'Lunes' },
+  { value: 'TUESDAY', label: 'Martes' },
+  { value: 'WEDNESDAY', label: 'Miércoles' },
+  { value: 'THURSDAY', label: 'Jueves' },
+  { value: 'FRIDAY', label: 'Viernes' },
+  { value: 'SATURDAY', label: 'Sábado' },
+  { value: 'SUNDAY', label: 'Domingo' },
+];

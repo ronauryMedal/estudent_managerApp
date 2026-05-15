@@ -1,0 +1,10 @@
+.tab2-ion-content {
+  --padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.25rem));
+}
+
+.tab2-placeholder__text {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ion-color-medium-shade, #616161);
+}

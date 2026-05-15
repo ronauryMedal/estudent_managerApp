@@ -105,7 +105,7 @@
                 <p class="subjects-item__meta">
                   {{ careerLabel(sub.careerId) }} · {{ modalityLabel(sub) }} ·
                   {{ sub.credits }} créd. · Cuatri. plan
-                  {{ planQuarter(sub) }}
+                  {{ planQuarter(sub) }} · {{ teacherNamesLine(sub) }}
                 </p>
               </ion-label>
               <ion-icon
@@ -156,6 +156,12 @@
       }
     }
   </div>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button color="dark" aria-label="Nueva materia" (click)="openCreateModal()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>
 
 <ion-modal [isOpen]="createOpen()" (didDismiss)="closeCreateModal()">
@@ -213,6 +219,28 @@
               formControlName="credits"
             ></ion-input>
           </ion-item>
+          <ion-item>
+            <ion-select
+              label="Profesor (opcional)"
+              labelPlacement="stacked"
+              formControlName="teacherId"
+              interface="popover"
+              placeholder="Sin profesor"
+            >
+              <ion-select-option value="">Sin profesor</ion-select-option>
+              @for (t of myTeachersList(); track t.id) {
+                <ion-select-option [value]="t.id">{{ t.name }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+          @if (myTeachersList().length === 0) {
+            <p class="subjects-form-hint ion-padding-horizontal">
+              No tenés profesores.
+              <ion-button fill="clear" size="small" (click)="goToTeachers()">
+                Crear en Profesores
+              </ion-button>
+            </p>
+          }
           <ion-item>
             <ion-select
               label="Modalidad"
@@ -278,46 +306,227 @@
     @if (detailSubject(); as sub) {
       <ion-header>
         <ion-toolbar>
-          <ion-title>{{ sub.name }}</ion-title>
+          <ion-title>Materia</ion-title>
           <ion-buttons slot="end">
             <ion-button fill="clear" (click)="closeDetail()">Cerrar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
-      <ion-content class="ion-padding subject-detail">
-        @if (courseLine(sub)) {
-          <p class="subject-detail__line">{{ courseLine(sub) }}</p>
-        }
-        <p class="subject-detail__line">
-          <strong>Modalidad:</strong> {{ modalityLabel(sub) }}
-        </p>
-        <p class="subject-detail__line">
-          <strong>Créditos:</strong> {{ sub.credits }} ·
-          <strong>Cuatrimestre (plan):</strong>
-          {{ planQuarter(sub) }}
-        </p>
-        <p class="subject-detail__line">
-          <strong>Carrera:</strong> {{ careerLabel(sub.careerId) }}
-        </p>
+      <ion-content class="subject-detail">
+        <div class="subject-detail__hero">
+          <h1 class="subject-detail__name">{{ sub.name }}</h1>
+          <div class="subject-detail__chips">
+            <span class="subject-detail__chip">{{ modalityLabel(sub) }}</span>
+            <span class="subject-detail__chip">{{ sub.credits }} créditos</span>
+            <span class="subject-detail__chip">Cuat. {{ planQuarter(sub) }}</span>
+          </div>
+          <p class="subject-detail__career">{{ careerLabel(sub.careerId) }}</p>
+          @if (courseLine(sub)) {
+            <p class="subject-detail__course-line">{{ courseLine(sub) }}</p>
+          }
+          @if (detailEnrollment()) {
+            <p class="subject-detail__badge">En tu avance</p>
+          }
+        </div>
+
+        <section class="subject-detail__card">
+          <h2 class="subject-detail__h">
+            <ion-icon name="school-outline" aria-hidden="true"></ion-icon>
+            Profesor
+          </h2>
+          <p class="subject-detail__value">{{ teacherNamesLine(sub) }}</p>
+          @if (myTeachersList().length === 0) {
+            <p class="subject-detail__muted">
+              Creá profesores en el menú → Profesores para enlazarlos aquí.
+            </p>
+            <ion-button
+              expand="block"
+              fill="outline"
+              color="dark"
+              size="small"
+              (click)="goToTeachers()"
+            >
+              Ir a Profesores
+            </ion-button>
+          } @else {
+            <ion-list lines="none" class="subject-detail__inner-list">
+              <ion-item>
+                <ion-select
+                  label="Enlazar otro profesor"
+                  labelPlacement="stacked"
+                  interface="popover"
+                  placeholder="Seleccioná uno"
+                  [value]="detailTeacherId()"
+                  (ionChange)="onDetailTeacherPick($event)"
+                >
+                  @for (t of myTeachersList(); track t.id) {
+                    <ion-select-option [value]="t.id">{{ t.name }}</ion-select-option>
+                  }
+                </ion-select>
+              </ion-item>
+            </ion-list>
+            <ion-button
+              expand="block"
+              fill="outline"
+              color="dark"
+              size="small"
+              [disabled]="actionBusyId() === sub.id"
+              (click)="assignTeacherToDetail()"
+            >
+              @if (actionBusyId() === sub.id) {
+                <ion-spinner name="crescent" color="dark"></ion-spinner>
+              } @else {
+                Enlazar profesor
+              }
+            </ion-button>
+          }
+        </section>
+
+        <section class="subject-detail__card">
+          <div class="subject-detail__card-head">
+            <h2 class="subject-detail__h subject-detail__h--inline">
+              <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+              Horario semanal
+            </h2>
+            <ion-button
+              fill="clear"
+              size="small"
+              color="dark"
+              (click)="toggleScheduleForm()"
+            >
+              @if (showScheduleForm()) {
+                <ion-icon slot="start" name="close-outline" aria-hidden="true"></ion-icon>
+                Cancelar
+              } @else {
+                <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+                Añadir bloque
+              }
+            </ion-button>
+          </div>
+
+          <p class="subject-detail__hint">
+            Podés agregar varios bloques por semana (ej. lunes y viernes).
+          </p>
+
+          @if (detailSchedulesLoading() && sortedDetailSchedules().length === 0) {
+            <div class="subject-detail__sched-state">
+              <ion-spinner name="crescent" color="medium"></ion-spinner>
+              <span>Cargando horarios…</span>
+            </div>
+          } @else if (sortedDetailSchedules().length === 0) {
+            <p class="subject-detail__muted subject-detail__muted--center">
+              Sin bloques definidos. Añadí al menos uno para ver el horario en inicio
+              y listados.
+            </p>
+          } @else {
+            <ul class="subject-detail__sched-list">
+              @for (block of sortedDetailSchedules(); track block.id ?? $index) {
+                <li class="subject-detail__sched-item">
+                  <div class="subject-detail__sched-item-main">
+                    <ion-icon
+                      name="calendar-outline"
+                      class="subject-detail__sched-icon"
+                      aria-hidden="true"
+                    ></ion-icon>
+                    <span>{{ scheduleBlockLabel(block) }}</span>
+                  </div>
+                  <ion-button
+                    fill="clear"
+                    color="danger"
+                    size="small"
+                    [disabled]="scheduleDeletingId() === block.id"
+                    (click)="confirmDeleteSchedule(block)"
+                    aria-label="Eliminar bloque horario"
+                  >
+                    @if (scheduleDeletingId() === block.id) {
+                      <ion-spinner name="crescent" color="danger"></ion-spinner>
+                    } @else {
+                      <ion-icon
+                        slot="icon-only"
+                        name="trash-outline"
+                        aria-hidden="true"
+                      ></ion-icon>
+                    }
+                  </ion-button>
+                </li>
+              }
+            </ul>
+          }
+
+          @if (showScheduleForm()) {
+            <form
+              class="subject-detail__sched-form"
+              [formGroup]="scheduleForm"
+              (ngSubmit)="submitScheduleBlock()"
+            >
+              <ion-list lines="full">
+                <ion-item>
+                  <ion-select
+                    label="Día"
+                    labelPlacement="stacked"
+                    interface="popover"
+                    formControlName="weekday"
+                  >
+                    @for (d of weekdayOptions; track d.value) {
+                      <ion-select-option [value]="d.value">{{ d.label }}</ion-select-option>
+                    }
+                  </ion-select>
+                </ion-item>
+                <ion-item>
+                  <ion-input
+                    label="Hora inicio"
+                    labelPlacement="stacked"
+                    type="time"
+                    formControlName="startTime"
+                  ></ion-input>
+                </ion-item>
+                <ion-item>
+                  <ion-input
+                    label="Hora fin"
+                    labelPlacement="stacked"
+                    type="time"
+                    formControlName="endTime"
+                  ></ion-input>
+                </ion-item>
+                <ion-item>
+                  <ion-input
+                    label="Aula / sala (opcional)"
+                    labelPlacement="stacked"
+                    formControlName="room"
+                    placeholder="Lab 2, Aula 301…"
+                  ></ion-input>
+                </ion-item>
+              </ion-list>
+              @if (
+                scheduleForm.errors?.['endBeforeStart'] && scheduleForm.touched
+              ) {
+                <p class="subject-detail__error">
+                  La hora de fin debe ser posterior a la de inicio.
+                </p>
+              }
+              <ion-button
+                expand="block"
+                color="dark"
+                type="submit"
+                [disabled]="scheduleSubmitting()"
+              >
+                @if (scheduleSubmitting()) {
+                  <ion-spinner name="crescent" color="light"></ion-spinner>
+                } @else {
+                  Guardar bloque
+                }
+              </ion-button>
+            </form>
+          }
+        </section>
+
         @if (detailEnrollment(); as en) {
-          <p class="subject-detail__line">
-            <strong>En avance desde:</strong>
-            {{ formatApprovedAt(en.approvedAt) }}
+          <p class="subject-detail__enrollment-note">
+            En avance desde {{ formatApprovedAt(en.approvedAt) }}
           </p>
         }
 
-        <h3 class="subject-detail__h">Horario</h3>
-        @if (scheduleLines(sub).length === 0) {
-          <p class="subject-detail__muted">Horario a confirmar</p>
-        } @else {
-          <ul class="subject-detail__sched">
-            @for (line of scheduleLines(sub); track $index) {
-              <li>{{ line }}</li>
-            }
-          </ul>
-        }
-
-        <div class="subject-detail__actions">
+        <div class="subject-detail__actions ion-padding">
           @if (detailEnrollment(); as en) {
             <ion-button
               expand="block"

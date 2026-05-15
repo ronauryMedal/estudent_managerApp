@@ -1,14 +1,13 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import {
   IonButton,
+  IonButtons,
   IonContent,
+  IonFab,
+  IonFabButton,
   IonHeader,
   IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonNote,
+  IonModal,
   IonRefresher,
   IonRefresherContent,
   IonSpinner,
@@ -19,10 +18,11 @@ import { Subscription } from 'rxjs';
 import { addIcons } from 'ionicons';
 import {
   alertCircleOutline,
+  bookOutline,
   calendarOutline,
-  chevronForwardOutline,
-  clipboardOutline,
-  libraryOutline,
+  checkmarkDoneOutline,
+  flagOutline,
+  help,
 } from 'ionicons/icons';
 
 import { StudentDashboardPayload } from '../core/models/student-dashboard.model';
@@ -37,20 +37,19 @@ import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.comp
   styleUrls: ['tab1.page.scss'],
   imports: [
     StudentMenuButtonsComponent,
-    RouterLink,
+    IonFab,
+    IonFabButton,
     IonHeader,
     IonToolbar,
     IonTitle,
     IonContent,
     IonSpinner,
     IonButton,
+    IonButtons,
+    IonModal,
     IonRefresher,
     IonRefresherContent,
     IonIcon,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonNote,
   ],
 })
 export class Tab1Page {
@@ -63,6 +62,7 @@ export class Tab1Page {
   readonly payload = signal<StudentDashboardPayload | null>(null);
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly helpOpen = signal(false);
 
   readonly firstName = computed(() => {
     const u = this.auth.currentUser();
@@ -81,11 +81,20 @@ export class Tab1Page {
     addIcons({
       calendarOutline,
       alertCircleOutline,
-      clipboardOutline,
-      libraryOutline,
-      chevronForwardOutline,
+      help,
+      flagOutline,
+      checkmarkDoneOutline,
+      bookOutline,
     });
     this.destroyRef.onDestroy(() => this.loadSub?.unsubscribe());
+  }
+
+  openHelp(): void {
+    this.helpOpen.set(true);
+  }
+
+  closeHelp(): void {
+    this.helpOpen.set(false);
   }
 
   ionViewWillEnter(): void {
@@ -134,10 +143,11 @@ export class Tab1Page {
     return `En ${diff} días`;
   }
 
-  dueNoteColor(iso: string): 'danger' | 'warning' | 'medium' {
+  /** Para estilos del badge (danger | warning | ok). */
+  dueTone(iso: string): string {
     const diff = this.dueDayOffset(iso);
     if (diff === null) {
-      return 'medium';
+      return 'ok';
     }
     if (diff < 0) {
       return 'danger';
@@ -145,7 +155,12 @@ export class Tab1Page {
     if (diff <= 1) {
       return 'warning';
     }
-    return 'medium';
+    return 'ok';
+  }
+
+  isDueUrgent(iso: string): boolean {
+    const diff = this.dueDayOffset(iso);
+    return diff !== null && diff <= 1;
   }
 
   formatDueDateTime(iso: string): string {

@@ -57,6 +57,22 @@
         ></ion-icon>
         <ion-label>Materias</ion-label>
       </ion-item>
+      <ion-item
+        button
+        detail="false"
+        [class.side-menu-item--active]="isTeachersRoute()"
+        (click)="go('/teachers')"
+      >
+        <ion-icon
+          slot="start"
+          name="people-outline"
+          aria-hidden="true"
+        ></ion-icon>
+        <ion-label>
+          <h2 class="side-menu-item__title">Profesores</h2>
+          <p class="side-menu-item__hint">Crear y listar para tus materias</p>
+        </ion-label>
+      </ion-item>
     </ion-list>
 
     <div class="side-menu-footer">
