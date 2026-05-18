@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideIonicAngular } from '@ionic/angular/standalone';
 import { of } from 'rxjs';
 
+import { StudentSubjectTeachersService } from '../core/services/student-subject-teachers.service';
 import { StudentTeachersService } from '../core/services/student-teachers.service';
 import { TeachersPage } from './teachers.page';
 
@@ -17,6 +18,12 @@ describe('TeachersPage', () => {
         provideRouter([]),
         provideIonicAngular(),
         {
+          provide: StudentSubjectTeachersService,
+          useValue: {
+            getMyLinks: () => of([]),
+          },
+        },
+        {
           provide: StudentTeachersService,
           useValue: {
             getMyTeachers: () =>
@@ -29,6 +36,7 @@ describe('TeachersPage', () => {
               ]),
             createMyTeacher: () =>
               of({ id: 't2', name: 'Nuevo', email: null }),
+            deleteMyTeacher: () => of({}),
           },
         },
       ],

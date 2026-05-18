@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -81,8 +82,11 @@ import {
   sortSubjectSchedules,
   subjectCourseDetailLine,
   subjectScheduleLines,
+  subjectScheduleTrackKey,
 } from '../core/utils/subject-schedule-display';
 import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
+import { dedupeById } from '../core/utils/dedupe-by-id';
+import { mergeSubjectForDisplay } from '../core/utils/merge-subject-display';
 
 export interface EnrolledSubjectRow {
   enrollment: UserApprovedSubjectMine;
@@ -133,6 +137,9 @@ export class Tab3Page {
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private loadSub?: Subscription;
+  private createSub?: Subscription;
+  private scheduleLoadSub?: Subscription;
+  private scheduleCreateSub?: Subscription;
 
   readonly segment = signal<'plan' | 'approved'>('plan');
   readonly loading = signal(false);
@@ -169,6 +176,7 @@ export class Tab3Page {
   });
 
   readonly actionBusyId = signal<string | null>(null);
+  readonly deletingFromPlanId = signal<string | null>(null);
 
   readonly scheduleForm = this.fb.nonNullable.group(
     {
@@ -193,7 +201,12 @@ export class Tab3Page {
       calendarOutline,
       closeOutline,
     });
-    this.destroyRef.onDestroy(() => this.loadSub?.unsubscribe());
+    this.destroyRef.onDestroy(() => {
+      this.loadSub?.unsubscribe();
+      this.createSub?.unsubscribe();
+      this.scheduleLoadSub?.unsubscribe();
+      this.scheduleCreateSub?.unsubscribe();
+    });
 
     this.createForm
       .get('modality')!
@@ -229,11 +242,20 @@ export class Tab3Page {
   }
 
   teacherNamesLine(sub: Subject): string {
-    const names =
+    const names = this.assignedTeacherNames(sub);
+    return names.length > 0 ? names.join(', ') : 'Sin profesor';
+  }
+
+  hasAssignedTeacher(sub: Subject): boolean {
+    return this.assignedTeacherNames(sub).length > 0;
+  }
+
+  private assignedTeacherNames(sub: Subject): string[] {
+    return (
       sub.teachers
         ?.map((st) => st.teacher?.name?.trim())
-        .filter((n): n is string => !!n) ?? [];
-    return names.length > 0 ? names.join(', ') : 'Sin profesor';
+        .filter((n): n is string => !!n) ?? []
+    );
   }
 
   goToTeachers(): void {
@@ -252,10 +274,12 @@ export class Tab3Page {
     subject: Subject,
     enrollment: UserApprovedSubjectMine | null = null,
   ): void {
-    this.detailSubject.set(subject);
+    const fromPlan = this.planSubjects().find((s) => s.id === subject.id);
+    const merged = mergeSubjectForDisplay(fromPlan, subject);
+    this.detailSubject.set(merged);
     this.detailEnrollment.set(enrollment);
     this.detailTeacherId.set('');
-    this.detailSchedules.set(subject.schedules ?? []);
+    this.detailSchedules.set([]);
     this.showScheduleForm.set(false);
     this.scheduleForm.reset({
       weekday: 'MONDAY',
@@ -263,7 +287,7 @@ export class Tab3Page {
       endTime: '10:00',
       room: '',
     });
-    this.loadDetailSchedules(subject.id);
+    this.loadDetailSchedules(merged.id);
   }
 
   closeDetail(): void {
@@ -272,6 +296,7 @@ export class Tab3Page {
     this.detailSchedules.set([]);
     this.showScheduleForm.set(false);
     this.scheduleDeletingId.set(null);
+    this.deletingFromPlanId.set(null);
   }
 
   sortedDetailSchedules(): SubjectSchedule[] {
@@ -282,11 +307,18 @@ export class Tab3Page {
     return formatSubjectScheduleBlock(block);
   }
 
+  scheduleTrackId(block: SubjectSchedule): string {
+    return subjectScheduleTrackKey(block);
+  }
+
   toggleScheduleForm(): void {
     this.showScheduleForm.update((v) => !v);
   }
 
   submitScheduleBlock(): void {
+    if (this.scheduleSubmitting()) {
+      return;
+    }
     const sub = this.detailSubject();
     if (!sub || this.scheduleForm.invalid) {
       this.scheduleForm.markAllAsTouched();
@@ -302,17 +334,20 @@ export class Tab3Page {
       ...(room ? { room } : {}),
     };
 
+    this.scheduleCreateSub?.unsubscribe();
     this.scheduleSubmitting.set(true);
-    this.schedulesApi
+    this.scheduleCreateSub = this.schedulesApi
       .create(sub.id, body)
-      .pipe(finalize(() => this.scheduleSubmitting.set(false)))
+      .pipe(
+        switchMap(() => this.schedulesApi.list(sub.id)),
+        finalize(() => {
+          this.scheduleSubmitting.set(false);
+          this.scheduleCreateSub = undefined;
+        }),
+      )
       .subscribe({
-        next: async (created) => {
-          const next = sortSubjectSchedules([
-            ...this.detailSchedules(),
-            created,
-          ]);
-          this.patchSubjectSchedules(sub.id, next);
+        next: async (list) => {
+          this.applyDetailSchedules(sub.id, list);
           this.showScheduleForm.set(false);
           this.scheduleForm.patchValue({
             weekday: 'MONDAY',
@@ -348,21 +383,19 @@ export class Tab3Page {
       return;
     }
 
-    const a = await this.alert.create({
+    const alert = await this.alert.create({
       header: 'Quitar bloque',
       message: `¿Eliminar «${this.scheduleBlockLabel(block)}»?`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Eliminar',
-          role: 'destructive',
-          handler: () => {
-            this.deleteScheduleBlock(sub.id, scheduleId);
-          },
-        },
+        { text: 'Eliminar', role: 'destructive' },
       ],
     });
-    await a.present();
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    if (role === 'destructive') {
+      this.deleteScheduleBlock(sub.id, scheduleId);
+    }
   }
 
   private deleteScheduleBlock(subjectId: string, scheduleId: string): void {
@@ -372,8 +405,7 @@ export class Tab3Page {
       .pipe(finalize(() => this.scheduleDeletingId.set(null)))
       .subscribe({
         next: async () => {
-          const next = this.detailSchedules().filter((b) => b.id !== scheduleId);
-          this.patchSubjectSchedules(subjectId, next);
+          this.loadDetailSchedules(subjectId);
           const t = await this.toast.create({
             message: 'Bloque horario eliminado.',
             duration: 2200,
@@ -395,20 +427,30 @@ export class Tab3Page {
   }
 
   private loadDetailSchedules(subjectId: string): void {
+    this.scheduleLoadSub?.unsubscribe();
     this.detailSchedulesLoading.set(true);
-    this.schedulesApi
+    this.scheduleLoadSub = this.schedulesApi
       .list(subjectId)
       .pipe(finalize(() => this.detailSchedulesLoading.set(false)))
       .subscribe({
         next: (list) => {
-          const sorted = sortSubjectSchedules(list);
-          this.detailSchedules.set(sorted);
-          this.patchSubjectSchedules(subjectId, sorted);
+          if (this.detailSubject()?.id !== subjectId) {
+            return;
+          }
+          this.applyDetailSchedules(subjectId, list);
         },
         error: () => {
-          /* Mantener horarios embebidos en la materia si el GET falla. */
+          /* Si falla el GET, la lista queda vacía hasta reintentar. */
         },
       });
+  }
+
+  private applyDetailSchedules(
+    subjectId: string,
+    list: SubjectSchedule[],
+  ): void {
+    const sorted = sortSubjectSchedules(list);
+    this.patchSubjectSchedules(subjectId, sorted);
   }
 
   private patchSubjectSchedules(
@@ -532,15 +574,27 @@ export class Tab3Page {
             ),
           );
 
-          const sortedPlan = [...plan].sort((a, b) =>
+          const sortedPlan = dedupeById(plan).sort((a, b) =>
             a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
           );
           this.planSubjects.set(sortedPlan);
 
           const byId = new Map(sortedPlan.map((s) => [s.id, s]));
+          const detailId = this.detailSubject()?.id;
+          if (detailId) {
+            const refreshed = byId.get(detailId);
+            if (refreshed) {
+              this.detailSubject.set(refreshed);
+              this.detailSchedules.set(refreshed.schedules ?? []);
+            }
+          }
+
           const rows: EnrolledSubjectRow[] = [];
-          for (const e of enrollments) {
-            const sub = e.subject ?? byId.get(e.subjectId);
+          for (const e of dedupeById(enrollments)) {
+            const fromPlan = byId.get(e.subjectId);
+            const sub = e.subject
+              ? mergeSubjectForDisplay(fromPlan, e.subject)
+              : fromPlan;
             if (!sub) {
               continue;
             }
@@ -573,6 +627,9 @@ export class Tab3Page {
   }
 
   submitCreate(): void {
+    if (this.createSubmitting()) {
+      return;
+    }
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
       return;
@@ -591,13 +648,15 @@ export class Tab3Page {
     if (v.modality === 'IN_PERSON' || v.modality === 'HYBRID') {
       body.building = v.building.trim();
       body.section = v.section.trim();
-      body.courseNumber = v.courseNumber.trim();
+      const course = v.courseNumber.trim();
+      body.courseNumber = course.length > 0 ? course : null;
     }
 
     const teacherId = v.teacherId?.trim() || '';
 
+    this.createSub?.unsubscribe();
     this.createSubmitting.set(true);
-    this.subjectsApi
+    this.createSub = this.subjectsApi
       .createMySubject(body)
       .pipe(
         switchMap((created) => {
@@ -611,7 +670,10 @@ export class Tab3Page {
               switchMap((link) => of({ created, linkFailed: link === null })),
             );
         }),
-        finalize(() => this.createSubmitting.set(false)),
+        finalize(() => {
+          this.createSubmitting.set(false);
+          this.createSub = undefined;
+        }),
       )
       .subscribe({
         next: async (result) => {
@@ -656,7 +718,7 @@ export class Tab3Page {
 
   assignTeacherToDetail(): void {
     const sub = this.detailSubject();
-    if (!sub) {
+    if (!sub || this.actionBusyId() === sub.id) {
       return;
     }
     const teacherId = this.detailTeacherId();
@@ -700,6 +762,9 @@ export class Tab3Page {
   }
 
   async enrollSubject(subjectId: string): Promise<void> {
+    if (this.actionBusyId() === subjectId) {
+      return;
+    }
     this.actionBusyId.set(subjectId);
     this.subjectsApi
       .enroll({ subjectId })
@@ -729,22 +794,101 @@ export class Tab3Page {
       });
   }
 
-  async confirmUnenroll(row: EnrolledSubjectRow): Promise<void> {
-    const a = await this.alert.create({
-      header: 'Quitar materia',
-      message: `¿Dejar de cursar «${row.subject.name}»?`,
+  async confirmDeleteSubject(): Promise<void> {
+    const sub = this.detailSubject();
+    if (!sub || this.deletingFromPlanId()) {
+      return;
+    }
+
+    const subjectId = sub.id;
+    const inAdvance = !!this.detailEnrollment();
+    const alert = await this.alert.create({
+      header: 'Eliminar materia',
+      cssClass: 'alert-over-modal',
+      message: inAdvance
+        ? `¿Eliminar «${sub.name}» del plan? También desaparecerá de tu avance.`
+        : `¿Eliminar «${sub.name}» del plan? Esta acción no se puede deshacer.`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {
-          text: 'Quitar',
+          text: 'Eliminar',
           role: 'destructive',
           handler: () => {
-            this.unenroll(row.enrollment.id);
+            this.deleteSubject(subjectId);
           },
         },
       ],
     });
-    await a.present();
+    await alert.present();
+  }
+
+  private deleteSubject(subjectId: string): void {
+    if (this.deletingFromPlanId() === subjectId) {
+      return;
+    }
+
+    this.deletingFromPlanId.set(subjectId);
+    const enrollmentId = this.detailEnrollment()?.id;
+
+    this.subjectsApi
+      .deleteMySubjectComplete(subjectId, enrollmentId)
+      .pipe(finalize(() => this.deletingFromPlanId.set(null)))
+      .subscribe({
+        next: async () => {
+          const t = await this.toast.create({
+            message: 'Materia eliminada del plan.',
+            duration: 2200,
+            color: 'success',
+            position: 'bottom',
+          });
+          await t.present();
+          this.closeDetail();
+          this.reload();
+        },
+        error: async (err: HttpErrorResponse) => {
+          let message = 'No se pudo eliminar la materia.';
+          const apiMsg =
+            typeof err.error === 'object' &&
+            err.error &&
+            'message' in err.error
+              ? String((err.error as { message: unknown }).message)
+              : typeof err.error === 'string'
+                ? err.error
+                : '';
+          if (err.status === 409 || err.status === 500) {
+            message =
+              'No se puede eliminar: quitá tareas y enlaces de profesor, o reiniciá el servidor API actualizado.';
+          } else if (err.status === 403 || err.status === 404) {
+            message =
+              'No tenés permiso para eliminar esta materia o ya no existe en el plan.';
+          } else if (apiMsg) {
+            message = apiMsg;
+          }
+          const t = await this.toast.create({
+            message,
+            duration: 3600,
+            color: 'danger',
+            position: 'bottom',
+          });
+          await t.present();
+        },
+      });
+  }
+
+  async confirmUnenroll(row: EnrolledSubjectRow): Promise<void> {
+    const alert = await this.alert.create({
+      header: 'Quitar materia',
+      message: `¿Dejar de cursar «${row.subject.name}»?`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Quitar', role: 'destructive' },
+      ],
+    });
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    if (role === 'destructive') {
+      this.unenroll(row.enrollment.id);
+    }
   }
 
   private unenroll(enrollmentId: string): void {
@@ -780,7 +924,7 @@ export class Tab3Page {
     const modality = this.createForm.get('modality')!
       .value as SubjectModality;
     const need = modality === 'IN_PERSON' || modality === 'HYBRID';
-    for (const key of ['building', 'section', 'courseNumber'] as const) {
+    for (const key of ['building', 'section'] as const) {
       const c = this.createForm.get(key)!;
       if (need) {
         c.setValidators([Validators.required, Validators.minLength(1)]);
@@ -789,5 +933,8 @@ export class Tab3Page {
       }
       c.updateValueAndValidity({ emitEvent: false });
     }
+    const course = this.createForm.get('courseNumber')!;
+    course.clearValidators();
+    course.updateValueAndValidity({ emitEvent: false });
   }
 }

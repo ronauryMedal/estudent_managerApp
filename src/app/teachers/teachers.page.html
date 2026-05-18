@@ -99,6 +99,20 @@
                   }
                 </p>
               </ion-label>
+              <ion-button
+                slot="end"
+                fill="clear"
+                color="danger"
+                [disabled]="deletingTeacherId() === t.id"
+                [attr.aria-label]="'Eliminar ' + t.name"
+                (click)="confirmDelete(t)"
+              >
+                @if (deletingTeacherId() === t.id) {
+                  <ion-spinner name="crescent" color="danger"></ion-spinner>
+                } @else {
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                }
+              </ion-button>
             </ion-item>
           }
         </ion-list>
@@ -136,7 +150,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <form [formGroup]="form" novalidate (keydown.enter)="$event.preventDefault()">
         <ion-list lines="full">
           <ion-item>
             <ion-input
@@ -167,9 +181,10 @@
         <ion-button
           expand="block"
           color="dark"
-          type="submit"
+          type="button"
           class="ion-margin-top"
           [disabled]="submitting()"
+          (click)="submit()"
         >
           @if (submitting()) {
             <ion-spinner name="crescent" color="light"></ion-spinner>

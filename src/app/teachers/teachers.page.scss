@@ -44,10 +44,14 @@
 .teachers-card {
   --background: var(--ion-color-light, #f4f5f8);
   --padding-start: 0.75rem;
-  --inner-padding-end: 0.75rem;
+  --inner-padding-end: 0.25rem;
   --min-height: 72px;
   border-radius: 12px;
   overflow: hidden;
+
+  ion-button[slot='end'] {
+    margin-inline-start: 0.25rem;
+  }
 }
 
 .teachers-card__avatar {

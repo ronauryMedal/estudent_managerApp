@@ -64,11 +64,39 @@ export function formatSubjectScheduleBlock(b: SubjectSchedule): string {
   return line;
 }
 
+/** Mismo día, hora y aula = mismo bloque (aunque el API devuelva ids distintos). */
+export function subjectScheduleContentKey(block: SubjectSchedule): string {
+  const room = block.room?.trim() ?? '';
+  return `${normWeekday(block.weekday)}|${parseScheduleTimeToHHmm(block.startTime)}|${parseScheduleTimeToHHmm(block.endTime)}|${room}`;
+}
+
+/** Clave estable para `@for` track. */
+export function subjectScheduleTrackKey(block: SubjectSchedule): string {
+  return block.id ?? subjectScheduleContentKey(block);
+}
+
+/** Quita bloques repetidos por día, hora y aula. */
+export function dedupeSubjectSchedules(
+  list: readonly SubjectSchedule[],
+): SubjectSchedule[] {
+  const seen = new Set<string>();
+  const out: SubjectSchedule[] = [];
+  for (const block of list) {
+    const key = subjectScheduleContentKey(block);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    out.push(block);
+  }
+  return out;
+}
+
 /** Ordena bloques por día de la semana y hora de inicio. */
 export function sortSubjectSchedules(
   list: SubjectSchedule[],
 ): SubjectSchedule[] {
-  return [...list].sort((a, b) => {
+  return dedupeSubjectSchedules(list).sort((a, b) => {
     const da = WEEKDAY_ORDER[normWeekday(a.weekday)] ?? 99;
     const db = WEEKDAY_ORDER[normWeekday(b.weekday)] ?? 99;
     if (da !== db) {
@@ -84,7 +112,7 @@ export function sortSubjectSchedules(
 export function subjectScheduleLines(subject: Subject): string[] {
   const list = subject.schedules;
   if (list?.length) {
-    return sortSubjectSchedules(list).map(formatSubjectScheduleBlock);
+    return sortSubjectSchedules([...list]).map(formatSubjectScheduleBlock);
   }
 
   const row = subject as Subject & Record<string, unknown>;

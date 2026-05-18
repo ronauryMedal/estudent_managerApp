@@ -2,6 +2,11 @@
   <ion-toolbar>
     <app-student-menu-buttons />
     <ion-title>Tareas</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" aria-label="Nueva tarea" (click)="openCreateModal()">
+        <ion-icon slot="icon-only" name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -10,42 +15,157 @@
     <ion-toolbar>
       <app-student-menu-buttons />
       <ion-title size="large">Tareas</ion-title>
+      <ion-buttons slot="end">
+        <ion-button fill="clear" aria-label="Nueva tarea" (click)="openCreateModal()">
+          <ion-icon slot="icon-only" name="add"></ion-icon>
+        </ion-button>
+      </ion-buttons>
     </ion-toolbar>
   </ion-header>
 
-  <div class="tab2-placeholder ion-padding">
-    <p class="tab2-placeholder__text">
-      Aquí verás el listado y alta de tareas enlazadas a tus materias.
-      Mientras tanto, el mismo botón <strong>+</strong> flotante te permite crear
-      <strong>materias</strong> y <strong>profesores</strong> como en el resto de la app.
+  <ion-refresher slot="fixed" (ionRefresh)="reload($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="tasks-page">
+    <p class="tasks-hint">
+      Entregas y trabajos enlazados a tus materias (<code>GET /tasks</code>).
+      Las fechas próximas también aparecen en <strong>Inicio</strong>.
     </p>
-    <app-explore-container name="Tab 2 page"></app-explore-container>
+
+    @if (loading() && tasks().length === 0) {
+      <div class="tasks-state">
+        <ion-spinner name="crescent" color="dark"></ion-spinner>
+        <p>Cargando tareas…</p>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="tasks-state tasks-state--error">
+        <p>{{ errorMessage() }}</p>
+        <ion-button fill="outline" color="dark" (click)="reload()">
+          Reintentar
+        </ion-button>
+      </div>
+    }
+
+    @else if (tasks().length === 0) {
+      <div class="tasks-empty">
+        <ion-icon name="clipboard-outline" aria-hidden="true"></ion-icon>
+        <p>
+          No tenés tareas pendientes. Pulsa <strong>+</strong> para crear una
+          (necesitás materias en tu plan).
+        </p>
+      </div>
+    } @else {
+      <ion-list class="tasks-list" lines="none">
+        @for (task of tasks(); track task.id) {
+          <ion-item class="tasks-card" lines="none">
+            <ion-label>
+              <h2 class="tasks-card__title">{{ task.title }}</h2>
+              <p class="tasks-card__meta">
+                <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+                {{ formatDue(task.dueDate) }}
+              </p>
+              <p class="tasks-card__subject">{{ subjectLabel(task.subjectId) }}</p>
+              @if (task.description?.trim()) {
+                <p class="tasks-card__desc">{{ task.description }}</p>
+              }
+            </ion-label>
+            <ion-button
+              slot="end"
+              fill="clear"
+              color="danger"
+              [disabled]="deletingTaskId() === task.id"
+              [attr.aria-label]="'Eliminar ' + task.title"
+              (click)="confirmDelete(task)"
+            >
+              @if (deletingTaskId() === task.id) {
+                <ion-spinner name="crescent" color="danger"></ion-spinner>
+              } @else {
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              }
+            </ion-button>
+          </ion-item>
+        }
+      </ion-list>
+    }
   </div>
 
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button color="dark" aria-label="Acciones rápidas">
+    <ion-fab-button color="dark" aria-label="Nueva tarea" (click)="openCreateModal()">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
-    <ion-fab-list side="top">
-      <ion-fab-button
-        color="dark"
-        aria-label="Nueva materia"
-        routerLink="/tabs/tab3"
-        [queryParams]="{ create: '1' }"
-      >
-        <ion-icon name="library-outline"></ion-icon>
-      </ion-fab-button>
-      <ion-fab-button
-        color="dark"
-        aria-label="Nuevo profesor"
-        routerLink="/teachers"
-        [queryParams]="{ create: '1' }"
-      >
-        <ion-icon name="people-outline"></ion-icon>
-      </ion-fab-button>
-      <ion-fab-button color="dark" aria-label="Inicio" routerLink="/tabs/tab1">
-        <ion-icon name="home-outline"></ion-icon>
-      </ion-fab-button>
-    </ion-fab-list>
   </ion-fab>
 </ion-content>
+
+<ion-modal [isOpen]="createOpen()" (didDismiss)="closeCreateModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Nueva tarea</ion-title>
+        <ion-buttons slot="end">
+          <ion-button fill="clear" (click)="closeCreateModal()">Cerrar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <form [formGroup]="form" (keydown.enter)="$event.preventDefault()">
+        <ion-list lines="full">
+          <ion-item>
+            <ion-input
+              label="Título"
+              labelPlacement="stacked"
+              type="text"
+              formControlName="title"
+              autocomplete="off"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-textarea
+              label="Descripción (opcional)"
+              labelPlacement="stacked"
+              formControlName="description"
+              autoGrow="true"
+              rows="2"
+            ></ion-textarea>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              label="Fecha de entrega"
+              labelPlacement="stacked"
+              type="datetime-local"
+              formControlName="dueDate"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-select
+              label="Materia"
+              labelPlacement="stacked"
+              formControlName="subjectId"
+              interface="popover"
+            >
+              @for (s of planSubjects(); track s.id) {
+                <ion-select-option [value]="s.id">{{ s.name }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+        </ion-list>
+        <ion-button
+          expand="block"
+          color="dark"
+          type="button"
+          class="ion-margin-top"
+          [disabled]="createSubmitting()"
+          (click)="submitCreate()"
+        >
+          @if (createSubmitting()) {
+            <ion-spinner name="crescent" color="light"></ion-spinner>
+          } @else {
+            Guardar tarea
+          }
+        </ion-button>
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>

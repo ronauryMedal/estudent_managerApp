@@ -23,4 +23,12 @@ export class StudentTeachersService {
   createMyTeacher(body: CreateMyTeacherRequest): Observable<Teacher> {
     return this.http.post<Teacher>(`${this.apiBase}/teachers/me`, body);
   }
+
+  /**
+   * Eliminar profesor propio (`DELETE /teachers/:id`).
+   * El API responde 409 si aún está asignado a alguna materia.
+   */
+  deleteMyTeacher(teacherId: string): Observable<unknown> {
+    return this.http.delete<unknown>(`${this.apiBase}/teachers/${teacherId}`);
+  }
 }

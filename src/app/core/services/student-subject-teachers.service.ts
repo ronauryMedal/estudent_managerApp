@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
 import { apiOrigin } from '../auth-storage';
@@ -23,5 +24,17 @@ export class StudentSubjectTeachersService {
       `${this.apiBase}/subject-teachers/me`,
       body,
     );
+  }
+
+  /** Asignaciones profesor–materia de tu plan (`GET /subject-teachers/me`). */
+  getMyLinks(): Observable<SubjectTeacher[]> {
+    return this.http
+      .get<SubjectTeacher[]>(`${this.apiBase}/subject-teachers/me`)
+      .pipe(catchError(() => of([] as SubjectTeacher[])));
+  }
+
+  /** Quitar enlace (`DELETE /subject-teachers/:id`). */
+  unlink(id: string): Observable<unknown> {
+    return this.http.delete<unknown>(`${this.apiBase}/subject-teachers/${id}`);
   }
 }

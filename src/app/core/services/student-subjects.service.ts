@@ -1,11 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin, Observable, of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
 import { apiOrigin } from '../auth-storage';
 import { CreateMySubjectRequest, Subject } from '../models/subject.model';
+import { SubjectTeacher } from '../models/subject-teacher.model';
+import { Task } from '../models/task.model';
 import {
   AddMySubjectRequest,
   UserApprovedSubject,
@@ -30,6 +32,54 @@ export class StudentSubjectsService {
 
   createMySubject(body: CreateMySubjectRequest): Observable<Subject> {
     return this.http.post<Subject>(`${this.apiBase}/subjects/me`, body);
+  }
+
+  /** Elimina una materia de tu plan (`DELETE /subjects/:id`). */
+  deleteMySubject(subjectId: string): Observable<unknown> {
+    return this.http.delete<unknown>(`${this.apiBase}/subjects/${subjectId}`);
+  }
+
+  /**
+   * Quita enlaces (profesor, tareas, avance) y luego borra la materia.
+   * Necesario si el API aún no hace cascade delete o falla por FK.
+   */
+  deleteMySubjectComplete(
+    subjectId: string,
+    enrollmentId?: string,
+  ): Observable<unknown> {
+    return forkJoin({
+      links: this.http
+        .get<SubjectTeacher[]>(`${this.apiBase}/subject-teachers/me`)
+        .pipe(catchError(() => of([] as SubjectTeacher[]))),
+      tasks: this.http
+        .get<Task[]>(`${this.apiBase}/tasks`)
+        .pipe(catchError(() => of([] as Task[]))),
+    }).pipe(
+      switchMap(({ links, tasks }) => {
+        const steps: Observable<unknown>[] = [];
+        if (enrollmentId) {
+          steps.push(
+            this.unenroll(enrollmentId).pipe(catchError(() => of(undefined))),
+          );
+        }
+        for (const link of links.filter((l) => l.subjectId === subjectId)) {
+          steps.push(
+            this.http
+              .delete(`${this.apiBase}/subject-teachers/${link.id}`)
+              .pipe(catchError(() => of(undefined))),
+          );
+        }
+        for (const task of tasks.filter((t) => t.subjectId === subjectId)) {
+          steps.push(
+            this.http
+              .delete(`${this.apiBase}/tasks/${task.id}`)
+              .pipe(catchError(() => of(undefined))),
+          );
+        }
+        const cleanup$ = steps.length > 0 ? forkJoin(steps) : of([]);
+        return cleanup$.pipe(switchMap(() => this.deleteMySubject(subjectId)));
+      }),
+    );
   }
 
   getMyEnrollments(): Observable<UserApprovedSubjectMine[]> {

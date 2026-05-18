@@ -233,7 +233,7 @@ Body `POST /teachers/me` y `POST /teachers`:
 | `VIRTUAL` | Virtual |
 | `HYBRID` | Híbrida |
 
-Si `modality` es `IN_PERSON` o `HYBRID`, son obligatorios `building`, `section`, `courseNumber` (strings no vacíos). En `VIRTUAL` se guardan como `null`.
+Si `modality` es `IN_PERSON` o `HYBRID`, son obligatorios `building` y `section` (strings no vacíos). `courseNumber` es opcional (`null` si no se envía). En `VIRTUAL`, `building`, `section` y `courseNumber` se guardan como `null`.
 
 **`quarterNumber`**: cuatrimestre en el plan; entre `1` y `totalSemester` de la carrera.
 

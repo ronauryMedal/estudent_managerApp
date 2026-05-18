@@ -166,6 +166,17 @@
   margin-bottom: 0.35rem;
 }
 
+.subject-detail__sched-add-btn {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  margin: 0;
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 1.5rem;
+  }
+}
+
 .subject-detail__h {
   display: flex;
   align-items: center;

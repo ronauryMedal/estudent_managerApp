@@ -177,7 +177,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <form [formGroup]="createForm" (ngSubmit)="submitCreate()">
+      <form [formGroup]="createForm" (keydown.enter)="$event.preventDefault()">
         <ion-list lines="full">
           <ion-item>
             <ion-select
@@ -275,7 +275,7 @@
             </ion-item>
             <ion-item>
               <ion-input
-                label="Código de curso"
+                label="Código de curso (opcional)"
                 labelPlacement="stacked"
                 type="text"
                 formControlName="courseNumber"
@@ -286,9 +286,10 @@
         <ion-button
           expand="block"
           color="dark"
-          type="submit"
+          type="button"
           class="ion-margin-top"
           [disabled]="createSubmitting()"
+          (click)="submitCreate()"
         >
           @if (createSubmitting()) {
             <ion-spinner name="crescent" color="light"></ion-spinner>
@@ -308,6 +309,19 @@
         <ion-toolbar>
           <ion-title>Materia</ion-title>
           <ion-buttons slot="end">
+            <ion-button
+              fill="clear"
+              color="danger"
+              [disabled]="deletingFromPlanId() === sub.id"
+              aria-label="Eliminar del plan"
+              (click)="confirmDeleteSubject()"
+            >
+              @if (deletingFromPlanId() === sub.id) {
+                <ion-spinner name="crescent" color="danger"></ion-spinner>
+              } @else {
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              }
+            </ion-button>
             <ion-button fill="clear" (click)="closeDetail()">Cerrar</ion-button>
           </ion-buttons>
         </ion-toolbar>
@@ -335,50 +349,11 @@
             Profesor
           </h2>
           <p class="subject-detail__value">{{ teacherNamesLine(sub) }}</p>
-          @if (myTeachersList().length === 0) {
+          @if (!hasAssignedTeacher(sub)) {
             <p class="subject-detail__muted">
-              Creá profesores en el menú → Profesores para enlazarlos aquí.
+              Sin profesor asignado. Podés enlazarlo al crear la materia o desde
+              <strong>Profesores</strong> en el menú.
             </p>
-            <ion-button
-              expand="block"
-              fill="outline"
-              color="dark"
-              size="small"
-              (click)="goToTeachers()"
-            >
-              Ir a Profesores
-            </ion-button>
-          } @else {
-            <ion-list lines="none" class="subject-detail__inner-list">
-              <ion-item>
-                <ion-select
-                  label="Enlazar otro profesor"
-                  labelPlacement="stacked"
-                  interface="popover"
-                  placeholder="Seleccioná uno"
-                  [value]="detailTeacherId()"
-                  (ionChange)="onDetailTeacherPick($event)"
-                >
-                  @for (t of myTeachersList(); track t.id) {
-                    <ion-select-option [value]="t.id">{{ t.name }}</ion-select-option>
-                  }
-                </ion-select>
-              </ion-item>
-            </ion-list>
-            <ion-button
-              expand="block"
-              fill="outline"
-              color="dark"
-              size="small"
-              [disabled]="actionBusyId() === sub.id"
-              (click)="assignTeacherToDetail()"
-            >
-              @if (actionBusyId() === sub.id) {
-                <ion-spinner name="crescent" color="dark"></ion-spinner>
-              } @else {
-                Enlazar profesor
-              }
-            </ion-button>
           }
         </section>
 
@@ -392,14 +367,16 @@
               fill="clear"
               size="small"
               color="dark"
+              class="subject-detail__sched-add-btn"
+              [attr.aria-label]="
+                showScheduleForm() ? 'Cancelar' : 'Añadir bloque horario'
+              "
               (click)="toggleScheduleForm()"
             >
               @if (showScheduleForm()) {
-                <ion-icon slot="start" name="close-outline" aria-hidden="true"></ion-icon>
-                Cancelar
+                <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
               } @else {
-                <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
-                Añadir bloque
+                <ion-icon slot="icon-only" name="add-outline" aria-hidden="true"></ion-icon>
               }
             </ion-button>
           </div>
@@ -420,7 +397,7 @@
             </p>
           } @else {
             <ul class="subject-detail__sched-list">
-              @for (block of sortedDetailSchedules(); track block.id ?? $index) {
+              @for (block of sortedDetailSchedules(); track scheduleTrackId(block)) {
                 <li class="subject-detail__sched-item">
                   <div class="subject-detail__sched-item-main">
                     <ion-icon
@@ -457,7 +434,6 @@
             <form
               class="subject-detail__sched-form"
               [formGroup]="scheduleForm"
-              (ngSubmit)="submitScheduleBlock()"
             >
               <ion-list lines="full">
                 <ion-item>
@@ -507,8 +483,9 @@
               <ion-button
                 expand="block"
                 color="dark"
-                type="submit"
+                type="button"
                 [disabled]="scheduleSubmitting()"
+                (click)="submitScheduleBlock()"
               >
                 @if (scheduleSubmitting()) {
                   <ion-spinner name="crescent" color="light"></ion-spinner>

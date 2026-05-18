@@ -20,6 +20,7 @@ import { User } from '../models/user.model';
 import { UserApprovedSubject } from '../models/user-approved-subject.model';
 import { UserCareer } from '../models/user-career.model';
 import { studentAcademicRefs } from '../utils/student-academic-refs';
+import { mergeSubjectForDisplay } from '../utils/merge-subject-display';
 import {
   subjectCourseDetailLine,
   subjectScheduleLines,
@@ -96,7 +97,8 @@ export class StudentDashboardService {
     }
     for (const a of approved) {
       if (a.subject) {
-        byId.set(a.subject.id, a.subject);
+        const fromPlan = byId.get(a.subject.id);
+        byId.set(a.subject.id, mergeSubjectForDisplay(fromPlan, a.subject));
       }
     }
 
