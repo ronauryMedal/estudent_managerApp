@@ -17,7 +17,6 @@
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <app-student-menu-buttons />
       <ion-title size="large">Materias</ion-title>
       <ion-buttons slot="end">
         <ion-button
@@ -92,41 +91,63 @@
           <code>/careers/me</code>).
         </p>
       } @else {
-        <ion-list class="subjects-list" lines="full">
-          @for (sub of planSubjects(); track sub.id) {
-            <ion-item
-              class="subjects-item"
-              button
-              detail="false"
+        <div class="subjects-cards" role="list">
+          @for (sub of planSubjects(); track sub.id; let i = $index) {
+            <button
+              type="button"
+              class="subjects-card app-card-interactive"
+              [ngClass]="subjectAccentClass(sub.id)"
+              role="listitem"
+              appAnimateIn
+              animation="fadeInUp"
+              [delayMs]="50 + i * 40"
               (click)="openDetail(sub, null)"
             >
-              <ion-label>
-                <h2 class="subjects-item__title">{{ sub.name }}</h2>
-                <p class="subjects-item__meta">
-                  {{ careerLabel(sub.careerId) }} · {{ modalityLabel(sub) }} ·
-                  {{ sub.credits }} créd. · Cuatri. plan
-                  {{ planQuarter(sub) }} · {{ teacherNamesLine(sub) }}
-                </p>
-                @if (locationLines(sub).length) {
-                  <p class="subjects-item__location">
-                    {{ locationLines(sub).join(' · ') }}
-                  </p>
+              <span class="subjects-card__accent" aria-hidden="true"></span>
+              <span class="subjects-card__main">
+                <span class="subjects-card__header">
+                  <span
+                    class="subjects-card__chip subjects-card__chip--modality"
+                    [attr.data-modality]="sub.modality ?? 'VIRTUAL'"
+                  >
+                    {{ modalityLabel(sub) }}
+                  </span>
+                  <span class="subjects-card__chip subjects-card__chip--credits">
+                    {{ sub.credits }} créd.
+                  </span>
+                </span>
+                <span class="subjects-card__title">{{ sub.name }}</span>
+                <span class="subjects-card__career">{{ careerLabel(sub.careerId) }}</span>
+                <span class="subjects-card__row">
+                  <span class="subjects-card__pill">
+                    Cuat. {{ planQuarter(sub) }}
+                  </span>
+                  <span class="subjects-card__pill subjects-card__pill--teacher">
+                    <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+                    {{ teacherNamesLine(sub) }}
+                  </span>
+                </span>
+                @if (locationPreview(sub)) {
+                  <span class="subjects-card__extra">
+                    <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+                    {{ locationPreview(sub) }}
+                  </span>
                 }
-                @if (scheduleLines(sub).length) {
-                  <p class="subjects-item__schedule">
-                    {{ scheduleLines(sub).join(' · ') }}
-                  </p>
+                @if (schedulePreview(sub)) {
+                  <span class="subjects-card__extra subjects-card__extra--schedule">
+                    <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                    {{ schedulePreview(sub) }}
+                  </span>
                 }
-              </ion-label>
+              </span>
               <ion-icon
-                slot="end"
                 name="chevron-forward-outline"
-                class="subjects-item__chev"
+                class="subjects-card__chev"
                 aria-hidden="true"
               ></ion-icon>
-            </ion-item>
+            </button>
           }
-        </ion-list>
+        </div>
       }
     }
 
@@ -138,41 +159,59 @@
           inscripción vía API.
         </p>
       } @else {
-        <ion-list class="subjects-list" lines="full">
-          @for (row of enrolledRows(); track row.enrollment.id) {
-            <ion-item
-              class="subjects-item"
-              button
-              detail="false"
+        <div class="subjects-cards" role="list">
+          @for (row of enrolledRows(); track row.enrollment.id; let i = $index) {
+            <button
+              type="button"
+              class="subjects-card app-card-interactive subjects-card--enrolled"
+              [ngClass]="subjectAccentClass(row.subject.id)"
+              role="listitem"
+              appAnimateIn
+              animation="fadeInUp"
+              [delayMs]="50 + i * 40"
               (click)="openDetail(row.subject, row.enrollment)"
             >
-              <ion-label>
-                <h2 class="subjects-item__title">{{ row.subject.name }}</h2>
-                <p class="subjects-item__meta">
-                  {{ modalityLabel(row.subject) }} ·
-                  {{ row.subject.credits }} créd. · Cuatri. plan
-                  {{ planQuarter(row.subject) }}
-                </p>
-                @if (locationLines(row.subject).length) {
-                  <p class="subjects-item__location">
-                    {{ locationLines(row.subject).join(' · ') }}
-                  </p>
+              <span class="subjects-card__accent" aria-hidden="true"></span>
+              <span class="subjects-card__main">
+                <span class="subjects-card__header">
+                  <span class="subjects-card__badge">En avance</span>
+                  <span
+                    class="subjects-card__chip subjects-card__chip--modality"
+                    [attr.data-modality]="row.subject.modality ?? 'VIRTUAL'"
+                  >
+                    {{ modalityLabel(row.subject) }}
+                  </span>
+                </span>
+                <span class="subjects-card__title">{{ row.subject.name }}</span>
+                <span class="subjects-card__row">
+                  <span class="subjects-card__pill">
+                    {{ row.subject.credits }} créd.
+                  </span>
+                  <span class="subjects-card__pill">
+                    Cuat. {{ planQuarter(row.subject) }}
+                  </span>
+                </span>
+                @if (locationPreview(row.subject)) {
+                  <span class="subjects-card__extra">
+                    <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+                    {{ locationPreview(row.subject) }}
+                  </span>
                 }
-                @if (scheduleLines(row.subject).length) {
-                  <p class="subjects-item__schedule">
-                    {{ scheduleLines(row.subject).join(' · ') }}
-                  </p>
+                @if (schedulePreview(row.subject)) {
+                  <span class="subjects-card__extra subjects-card__extra--schedule">
+                    <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                    {{ schedulePreview(row.subject) }}
+                  </span>
                 }
-              </ion-label>
+              </span>
               <ion-icon
-                slot="end"
                 name="chevron-forward-outline"
-                class="subjects-item__chev"
+                class="subjects-card__chev"
                 aria-hidden="true"
               ></ion-icon>
-            </ion-item>
+            </button>
           }
-        </ion-list>
+        </div>
       }
     }
   </div>
@@ -188,12 +227,8 @@
   <ng-template>
     <ion-header>
       <ion-toolbar>
+        <app-student-nav-back [actionMode]="true" (dismiss)="closeCreateModal()" />
         <ion-title>Nueva materia</ion-title>
-        <ion-buttons slot="end">
-          <ion-button fill="clear" (click)="closeCreateModal()">
-            Cerrar
-          </ion-button>
-        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
@@ -328,6 +363,7 @@
     @if (detailSubject(); as sub) {
       <ion-header>
         <ion-toolbar>
+          <app-student-nav-back [actionMode]="true" (dismiss)="closeDetail()" />
           <ion-title>Materia</ion-title>
           <ion-buttons slot="end">
             <ion-button
@@ -343,7 +379,6 @@
                 <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
               }
             </ion-button>
-            <ion-button fill="clear" (click)="closeDetail()">Cerrar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>

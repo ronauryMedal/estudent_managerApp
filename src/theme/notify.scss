@@ -1,0 +1,282 @@
+/* ─── Toasts: tarjetas flotantes con acento lateral ─── */
+
+@keyframes app-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes app-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+ion-toast.app-toast {
+  --background: transparent;
+  --box-shadow: none;
+  --border-radius: var(--app-radius-lg);
+  --start: 16px;
+  --end: 16px;
+  --min-height: 64px;
+  --color: var(--ion-text-color);
+  font-family: var(--app-font);
+  margin-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  transform-origin: center bottom;
+  animation: app-toast-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+ion-toast.app-toast.ion-hide {
+  animation: app-toast-out 0.28s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+ion-toast.app-toast::part(container) {
+  border-radius: var(--app-radius-lg);
+  border: 1px solid var(--app-border-strong);
+  background: var(--app-notify-surface);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    inset 3px 0 0 0 var(--app-notify-accent, var(--ion-color-primary)),
+    var(--app-shadow-lg),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  padding: 14px 12px 14px 14px;
+}
+
+ion-toast.app-toast::part(header) {
+  font-size: 0.9375rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  margin-bottom: 3px;
+  color: var(--ion-text-color);
+  padding-inline-start: 4px;
+}
+
+ion-toast.app-toast::part(message) {
+  font-size: 0.8125rem;
+  font-weight: 450;
+  line-height: 1.45;
+  color: var(--app-text-secondary);
+  padding-inline-start: 4px;
+}
+
+ion-toast.app-toast::part(icon) {
+  font-size: 1.35rem;
+  margin-inline-end: 12px;
+  margin-inline-start: 6px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--app-notify-icon-bg, var(--app-accent-soft));
+  color: var(--app-notify-accent, var(--ion-color-primary));
+  box-sizing: content-box;
+}
+
+ion-toast.app-toast::part(button) {
+  opacity: 0.55;
+  font-size: 1.1rem;
+  margin-inline-end: 4px;
+  transition: opacity 0.15s ease;
+}
+
+ion-toast.app-toast::part(button):hover {
+  opacity: 1;
+}
+
+ion-toast.app-toast--success {
+  --app-notify-accent: var(--app-notify-success);
+  --app-notify-icon-bg: var(--app-notify-success-soft);
+}
+
+ion-toast.app-toast--error {
+  --app-notify-accent: var(--app-notify-error);
+  --app-notify-icon-bg: var(--app-notify-error-soft);
+}
+
+ion-toast.app-toast--warning {
+  --app-notify-accent: var(--app-notify-warning);
+  --app-notify-icon-bg: var(--app-notify-warning-soft);
+}
+
+ion-toast.app-toast--info {
+  --app-notify-accent: var(--app-notify-info);
+  --app-notify-icon-bg: var(--app-notify-info-soft);
+}
+
+/* ─── Alertas de confirmación: modal tipo tarjeta ─── */
+
+@keyframes app-alert-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.app-alert {
+  --backdrop-opacity: 1;
+  --max-width: min(340px, calc(100vw - 40px));
+
+  &.overlay-hidden {
+    display: none;
+  }
+
+  .alert-wrapper {
+    border-radius: var(--app-radius-xl);
+    border: 1px solid var(--app-border-strong);
+    background: var(--app-notify-surface);
+    backdrop-filter: blur(24px) saturate(1.15);
+    -webkit-backdrop-filter: blur(24px) saturate(1.15);
+    box-shadow:
+      var(--app-shadow-lg),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    animation: app-alert-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+    overflow: hidden;
+  }
+
+  .alert-head {
+    padding: 1.5rem 1.35rem 0.35rem;
+    text-align: center;
+
+    &::before {
+      content: '';
+      display: block;
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 14px;
+      border-radius: 16px;
+      background: var(--app-alert-icon-bg, var(--app-accent-soft));
+      background-image: var(--app-alert-icon-svg);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 26px 26px;
+      box-shadow: 0 4px 14px var(--app-alert-icon-shadow, rgba(79, 70, 229, 0.2));
+    }
+  }
+
+  .alert-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.3;
+    color: var(--ion-text-color);
+    padding: 0 0.25rem;
+  }
+
+  .alert-message {
+    font-size: 0.9rem;
+    font-weight: 450;
+    line-height: 1.55;
+    color: var(--app-text-secondary);
+    padding: 0.5rem 1.35rem 1.25rem;
+    text-align: center;
+    max-width: 28em;
+    margin-inline: auto;
+  }
+
+  .alert-button-group {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    padding: 0 1rem 1.15rem;
+    border-top: none;
+  }
+
+  .alert-button {
+    flex: 1;
+    margin: 0;
+    min-height: 46px;
+    border-radius: var(--app-radius-md);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border: 1px solid transparent;
+    transition:
+      background 0.18s ease,
+      transform 0.12s ease,
+      opacity 0.12s ease;
+
+    &:active {
+      transform: scale(0.97);
+    }
+  }
+
+  .alert-button.alert-button-role-cancel {
+    background: var(--app-surface-elevated);
+    color: var(--app-text-secondary);
+    border-color: var(--app-border);
+  }
+
+  .alert-button.alert-button-role-confirm {
+    background: var(--ion-color-primary);
+    color: var(--ion-color-primary-contrast);
+    font-weight: 650;
+    box-shadow: 0 4px 14px rgba(var(--ion-color-primary-rgb), 0.35);
+  }
+
+  .alert-button.alert-button-role-destructive {
+    background: var(--app-notify-error);
+    color: #fff;
+    font-weight: 650;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+  }
+}
+
+.app-alert--destructive {
+  --app-alert-icon-bg: var(--app-notify-error-soft);
+  --app-alert-icon-shadow: rgba(239, 68, 68, 0.25);
+  --app-alert-icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ef4444'%3E%3Cpath d='M256 80c-8.66 0-16.58 4.28-21.35 11.43L21.18 402.5c-5.33 8.05-5.37 18.38-.08 26.47a25.95 25.95 0 0 0 22.01 12.03h387.78c9.05 0 17.2-5.06 21.27-13.18 5.11-10.69 3.67-23.38-3.57-32.77L277.35 91.43C272.58 84.28 264.66 80 256 80z'/%3E%3C/svg%3E");
+}
+
+.app-alert--neutral {
+  --app-alert-icon-bg: var(--app-notify-info-soft);
+  --app-alert-icon-shadow: rgba(79, 70, 229, 0.22);
+  --app-alert-icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%234f46e5'%3E%3Cpath d='M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm-8 304a16 16 0 1 1 32 0 16 16 0 0 1-32 0zm8-112V160a16 16 0 0 1 32 0v80a16 16 0 0 1-32 0z'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-alert--neutral {
+    --app-alert-icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23818cf8'%3E%3Cpath d='M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm-8 304a16 16 0 1 1 32 0 16 16 0 0 1-32 0zm8-112V160a16 16 0 0 1 32 0v80a16 16 0 0 1-32 0z'/%3E%3C/svg%3E");
+  }
+
+  .app-alert--destructive {
+    --app-alert-icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23f87171'%3E%3Cpath d='M256 80c-8.66 0-16.58 4.28-21.35 11.43L21.18 402.5c-5.33 8.05-5.37 18.38-.08 26.47a25.95 25.95 0 0 0 22.01 12.03h387.78c9.05 0 17.2-5.06 21.27-13.18 5.11-10.69 3.67-23.38-3.57-32.77L277.35 91.43C272.58 84.28 264.66 80 256 80z'/%3E%3C/svg%3E");
+  }
+}
+
+/* Backdrop con blur (ion-alert overlay) */
+ion-alert.app-alert {
+  --backdrop-opacity: 0;
+
+  &::part(backdrop) {
+    background: var(--app-notify-backdrop);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+}
+
+.app-alert.alert-over-modal,
+ion-alert.app-alert.alert-over-modal {
+  z-index: 20010;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ion-toast.app-toast,
+  ion-toast.app-toast.ion-hide,
+  .app-alert .alert-wrapper {
+    animation: none !important;
+  }
+}

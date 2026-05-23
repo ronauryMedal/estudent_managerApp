@@ -1,7 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import {
   IonButton,
-  IonButtons,
   IonContent,
   IonFab,
   IonFabButton,
@@ -30,6 +29,8 @@ import { AuthService } from '../core/services/auth.service';
 import { StudentDashboardService } from '../core/services/student-dashboard.service';
 import { userCareerContextLine } from '../core/utils/user-career-context';
 import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
+import { StudentNavBackComponent } from '../shared/student-nav-back.component';
+import { AnimateInDirective } from '../shared/animate-in.directive';
 
 @Component({
   selector: 'app-tab1',
@@ -37,6 +38,8 @@ import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.comp
   styleUrls: ['tab1.page.scss'],
   imports: [
     StudentMenuButtonsComponent,
+    StudentNavBackComponent,
+    AnimateInDirective,
     IonFab,
     IonFabButton,
     IonHeader,
@@ -45,7 +48,6 @@ import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.comp
     IonContent,
     IonSpinner,
     IonButton,
-    IonButtons,
     IonModal,
     IonRefresher,
     IonRefresherContent,

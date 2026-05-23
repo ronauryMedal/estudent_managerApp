@@ -5,8 +5,10 @@
 }
 
 .subjects-segment {
-  margin: 0.5rem 1rem 0.75rem;
-  --background: var(--ion-color-light, #f4f5f8);
+  margin: 0.5rem 0 0.75rem;
+  --background: var(--app-surface-elevated);
+  border-radius: var(--app-radius-md);
+  border: 1px solid var(--app-border);
 }
 
 .subjects-segment ion-icon {
@@ -14,13 +16,14 @@
 }
 
 .subjects-hint {
-  margin: 0 1rem 0.75rem;
+  margin: 0 0 0.75rem;
   padding: 0.65rem 0.75rem;
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: var(--ion-color-medium-shade, #616161);
-  background: var(--ion-color-light, #f4f5f8);
-  border-radius: 10px;
+  color: var(--app-text-secondary);
+  background: var(--app-surface-elevated);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
 }
 
 .subjects-state {
@@ -30,7 +33,7 @@
   gap: 0.75rem;
   padding: 2rem 1rem;
   text-align: center;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
 
   p {
     margin: 0;
@@ -43,58 +46,14 @@
 }
 
 .subjects-empty {
-  margin: 1.25rem 1rem;
+  margin: 1.25rem 0;
   padding: 1rem;
   font-size: 0.9375rem;
   line-height: 1.45;
-  color: var(--ion-color-medium-shade, #616161);
-  background: var(--ion-color-light, #f4f5f8);
-  border-radius: 12px;
-}
-
-.subjects-list {
-  margin: 0;
-  padding: 0 0.5rem;
-  background: transparent;
-}
-
-.subjects-item__title {
-  margin: 0 0 0.25rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--ion-text-color, #1e1e1e);
-}
-
-.subjects-item__meta {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--ion-color-medium, #92949c);
-}
-
-.subjects-item__location {
-  margin: 0.25rem 0 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--ion-text-color, #1e1e1e);
-}
-
-.subjects-item__schedule {
-  margin: 0.15rem 0 0;
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  color: var(--ion-color-medium-shade, #616161);
-}
-
-.subjects-item__chev {
-  color: var(--ion-color-medium, #92949c);
-  font-size: 1.25rem;
-}
-
-.subjects-item ion-button[slot='end'] {
-  margin-inline-start: 0.5rem;
-  --padding-start: 12px;
-  --padding-end: 12px;
+  color: var(--app-text-secondary);
+  background: var(--app-empty-bg);
+  border: 1px dashed var(--app-empty-border);
+  border-radius: var(--app-radius-md);
 }
 
 .subject-detail {
@@ -105,8 +64,8 @@
   padding: 1rem 1rem 1.25rem;
   background: linear-gradient(
     165deg,
-    var(--ion-color-light, #f4f5f8) 0%,
-    var(--ion-background-color, #fff) 72%
+    var(--app-surface-muted) 0%,
+    var(--app-surface) 72%
   );
   border-bottom: 1px solid var(--ion-color-light-shade, #e0e0e0);
 }
@@ -116,7 +75,7 @@
   font-size: 1.35rem;
   font-weight: 700;
   line-height: 1.25;
-  color: var(--ion-text-color, #1e1e1e);
+  color: var(--ion-text-color);
 }
 
 .subject-detail__chips {
@@ -131,8 +90,8 @@
   padding: 0.2rem 0.55rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--ion-text-color, #1e1e1e);
-  background: var(--ion-background-color, #fff);
+  color: var(--ion-text-color);
+  background: var(--app-surface);
   border: 1px solid var(--ion-color-medium-tint, #ccc);
   border-radius: 999px;
 }
@@ -141,7 +100,7 @@
   margin: 0 0 0.35rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--ion-color-medium-shade, #616161);
+  color: var(--app-text-secondary);
 }
 
 .subject-detail__location {
@@ -149,7 +108,7 @@
   padding-left: 1.1rem;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--ion-text-color, #1e1e1e);
+  color: var(--ion-text-color);
   font-weight: 500;
 
   li {
@@ -173,7 +132,7 @@
 .subject-detail__card {
   margin: 0.85rem 1rem 0;
   padding: 0.85rem 0.9rem 1rem;
-  background: var(--ion-background-color, #fff);
+  background: var(--app-surface);
   border: 1px solid var(--ion-color-light-shade, #e0e0e0);
   border-radius: 14px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 4%);
@@ -207,7 +166,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
 
   ion-icon {
     font-size: 1rem;
@@ -222,20 +181,20 @@
   margin: 0 0 0.65rem;
   font-size: 0.9375rem;
   font-weight: 500;
-  color: var(--ion-text-color, #1e1e1e);
+  color: var(--ion-text-color);
 }
 
 .subject-detail__hint {
   margin: 0 0 0.75rem;
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
 }
 
 .subject-detail__muted {
   margin: 0 0 0.75rem;
   font-size: 0.875rem;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
 
   &--center {
     text-align: center;
@@ -262,7 +221,7 @@
   gap: 0.5rem;
   padding: 1rem 0;
   font-size: 0.875rem;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
 }
 
 .subject-detail__sched-list {
@@ -278,7 +237,7 @@
   gap: 0.35rem;
   padding: 0.55rem 0.35rem 0.55rem 0.5rem;
   margin-bottom: 0.35rem;
-  background: var(--ion-color-light, #f4f5f8);
+  background: var(--app-surface-muted);
   border-radius: 10px;
 }
 
@@ -290,14 +249,14 @@
   min-width: 0;
   font-size: 0.9375rem;
   line-height: 1.4;
-  color: var(--ion-text-color, #1e1e1e);
+  color: var(--ion-text-color);
 }
 
 .subject-detail__sched-icon {
   flex-shrink: 0;
   margin-top: 0.1rem;
   font-size: 1.1rem;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
 }
 
 .subject-detail__sched-form {
@@ -316,7 +275,7 @@
   margin: 0.75rem 1rem 0;
   font-size: 0.8125rem;
   text-align: center;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
 }
 
 .subject-detail__actions {
@@ -328,5 +287,5 @@
   margin: 0 0 0.5rem;
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: var(--ion-color-medium-shade, #616161);
+  color: var(--app-text-secondary);
 }

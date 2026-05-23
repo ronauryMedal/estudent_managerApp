@@ -36,6 +36,12 @@
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
 
+@import 'animate.css';
+@import './theme/motion.scss';
+@import './theme/notify.scss';
+@import './theme/card-accents.scss';
+@import './theme/subject-cards.scss';
+
 /* Ionic asigna .ion-page al host del componente enlazado (p. ej. app-login) */
 /* Login: pantalla completa oscura; register sigue con lienzo claro */
 app-login.ion-page {
@@ -60,4 +66,25 @@ app-register {
 /* Alertas de confirmación por encima de ion-modal (p. ej. eliminar materia). */
 .alert-over-modal {
   z-index: 100000 !important;
+}
+
+/* Botón atrás unificado (páginas y modales). */
+ion-back-button {
+  --icon-font-size: 1.35rem;
+  --padding-start: 2px;
+  --padding-end: 6px;
+}
+
+ion-fab-button {
+  --box-shadow: var(--app-shadow-md);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+ion-modal {
+  --border-radius: var(--app-radius-xl) var(--app-radius-xl) 0 0;
+}
+
+ion-modal ion-toolbar {
+  --padding-start: 4px;
+  --padding-end: 8px;
 }

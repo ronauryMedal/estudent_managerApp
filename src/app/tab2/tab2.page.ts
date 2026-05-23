@@ -1,10 +1,10 @@
+import { NgClass } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import {
   FormBuilder,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { AlertController, ToastController } from '@ionic/angular';
 import {
   IonButton,
   IonButtons,
@@ -32,6 +32,7 @@ import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
 import {
   add,
+  bookOutline,
   calendarOutline,
   clipboardOutline,
   trashOutline,
@@ -39,29 +40,40 @@ import {
 
 import { Subject } from '../core/models/subject.model';
 import { Task } from '../core/models/task.model';
+import { StudentNotifyService } from '../core/services/student-notify.service';
 import { StudentSubjectsService } from '../core/services/student-subjects.service';
 import { StudentTasksService } from '../core/services/student-tasks.service';
 import { dedupeById } from '../core/utils/dedupe-by-id';
 import { dedupeSubjects } from '../core/utils/dedupe-subjects';
 import { openTasks, taskContentKey } from '../core/utils/dedupe-tasks';
+import {
+  taskDueRelativeLabel,
+  taskDueTone,
+  taskIsDueUrgent,
+  taskSubjectAccentIndex,
+} from '../core/utils/task-due-display';
 import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
+import { StudentNavBackComponent } from '../shared/student-nav-back.component';
+import { AnimateInDirective } from '../shared/animate-in.directive';
 
 @Component({
   selector: 'app-tab2',
   templateUrl: 'tab2.page.html',
   styleUrls: ['tab2.page.scss'],
   imports: [
+    NgClass,
     StudentMenuButtonsComponent,
+    StudentNavBackComponent,
+    AnimateInDirective,
     ReactiveFormsModule,
     IonHeader,
     IonToolbar,
     IonTitle,
     IonButtons,
-    IonButton,
+      IonButton,
     IonContent,
     IonList,
     IonItem,
-    IonLabel,
     IonIcon,
     IonInput,
     IonTextarea,
@@ -79,8 +91,7 @@ export class Tab2Page {
   private readonly fb = inject(FormBuilder);
   private readonly tasksApi = inject(StudentTasksService);
   private readonly subjectsApi = inject(StudentSubjectsService);
-  private readonly alert = inject(AlertController);
-  private readonly toast = inject(ToastController);
+  private readonly notify = inject(StudentNotifyService);
   private readonly destroyRef = inject(DestroyRef);
 
   private loadSub?: Subscription;
@@ -103,7 +114,13 @@ export class Tab2Page {
   });
 
   constructor() {
-    addIcons({ add, clipboardOutline, calendarOutline, trashOutline });
+    addIcons({
+      add,
+      bookOutline,
+      clipboardOutline,
+      calendarOutline,
+      trashOutline,
+    });
     this.destroyRef.onDestroy(() => {
       this.loadSub?.unsubscribe();
       this.createSub?.unsubscribe();
@@ -133,6 +150,22 @@ export class Tab2Page {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  dueRelativeLabel(iso: string): string {
+    return taskDueRelativeLabel(iso);
+  }
+
+  dueTone(iso: string): string {
+    return taskDueTone(iso);
+  }
+
+  isDueUrgent(iso: string): boolean {
+    return taskIsDueUrgent(iso);
+  }
+
+  subjectAccentClass(subjectId: string): string {
+    return `tasks-card--accent-${taskSubjectAccentIndex(subjectId)}`;
   }
 
   taskTrackKey(task: Task): string {
@@ -176,15 +209,9 @@ export class Tab2Page {
 
   openCreateModal(): void {
     if (this.planSubjects().length === 0) {
-      void this.toast
-        .create({
-          message:
-            'Creá al menos una materia en la pestaña Materias para enlazar tareas.',
-          duration: 3600,
-          color: 'warning',
-          position: 'bottom',
-        })
-        .then((t) => t.present());
+      void this.notify.warning(
+        'Creá al menos una materia en la pestaña Materias para enlazar tareas.',
+      );
       return;
     }
 
@@ -218,14 +245,7 @@ export class Tab2Page {
     const v = this.form.getRawValue();
     const due = new Date(v.dueDate);
     if (Number.isNaN(due.getTime())) {
-      void this.toast
-        .create({
-          message: 'La fecha de entrega no es válida.',
-          duration: 2600,
-          color: 'warning',
-          position: 'bottom',
-        })
-        .then((t) => t.present());
+      void this.notify.warning('La fecha de entrega no es válida.');
       return;
     }
 
@@ -248,25 +268,13 @@ export class Tab2Page {
         }),
       )
       .subscribe({
-        next: async (list) => {
+        next: (list) => {
           this.applyTaskList(list);
-          const t = await this.toast.create({
-            message: 'Tarea creada.',
-            duration: 2200,
-            color: 'success',
-            position: 'bottom',
-          });
-          await t.present();
+          void this.notify.success('Tarea creada.');
           this.closeCreateModal();
         },
-        error: async () => {
-          const t = await this.toast.create({
-            message: 'No se pudo crear la tarea.',
-            duration: 3200,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+        error: () => {
+          void this.notify.error('No se pudo crear la tarea.');
         },
       });
   }
@@ -276,17 +284,14 @@ export class Tab2Page {
       return;
     }
 
-    const alert = await this.alert.create({
+    const ok = await this.notify.confirm({
       header: 'Eliminar tarea',
       message: `¿Eliminar «${task.title}»?`,
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        { text: 'Eliminar', role: 'destructive' },
-      ],
+      confirmText: 'Eliminar',
+      destructive: true,
+      overModal: true,
     });
-    await alert.present();
-    const { role } = await alert.onDidDismiss();
-    if (role === 'destructive') {
+    if (ok) {
       this.deleteTask(task);
     }
   }
@@ -326,24 +331,12 @@ export class Tab2Page {
         finalize(() => this.deletingTaskId.set(null)),
       )
       .subscribe({
-        next: async (list) => {
+        next: (list) => {
           this.applyTaskList(list);
-          const t = await this.toast.create({
-            message: 'Tarea eliminada.',
-            duration: 2200,
-            color: 'success',
-            position: 'bottom',
-          });
-          await t.present();
+          void this.notify.success('Tarea eliminada.');
         },
-        error: async () => {
-          const t = await this.toast.create({
-            message: 'No se pudo eliminar la tarea.',
-            duration: 2800,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+        error: () => {
+          void this.notify.error('No se pudo eliminar la tarea.');
           this.reload();
         },
       });

@@ -1,0 +1,66 @@
+/* Transiciones y micro-interacciones propias de la app */
+
+.app-animate-in {
+  animation-fill-mode: both;
+}
+
+.app-card-interactive {
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+@media (hover: hover) {
+  .app-card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--app-shadow-md);
+  }
+}
+
+.app-card-interactive:active {
+  transform: scale(0.985);
+}
+
+.app-pressable {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.app-pressable:active {
+  transform: scale(0.96);
+  opacity: 0.92;
+}
+
+@keyframes app-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.app-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--ion-color-light) 25%,
+    var(--app-surface) 50%,
+    var(--ion-color-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: app-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate__animated,
+  .app-animate-in {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .app-card-interactive:hover,
+  .app-card-interactive:active,
+  .app-pressable:active {
+    transform: none;
+  }
+}

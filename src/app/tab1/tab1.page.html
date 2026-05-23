@@ -8,7 +8,6 @@
 <ion-content [fullscreen]="true" class="dashboard-ion-content">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <app-student-menu-buttons />
       <ion-title size="large">Inicio</ion-title>
     </ion-toolbar>
   </ion-header>
@@ -19,7 +18,7 @@
 
   <div class="dashboard">
     @if (auth.currentUser()) {
-      <header class="dashboard-hero">
+      <header class="dashboard-hero" appAnimateIn animation="fadeIn" [delayMs]="0">
         <div class="dashboard-hero__inner">
           <h1 class="dashboard-hero__title">
             @if (firstName()) {
@@ -53,7 +52,13 @@
     }
 
     @if (payload(); as p) {
-      <section class="dashboard-section" aria-labelledby="upcoming-heading">
+      <section
+        class="dashboard-section"
+        aria-labelledby="upcoming-heading"
+        appAnimateIn
+        animation="fadeInUp"
+        [delayMs]="80"
+      >
         <div class="dashboard-section-head">
           <h2 id="upcoming-heading" class="dashboard-section-head__title">
             <ion-icon name="flag-outline" aria-hidden="true"></ion-icon>
@@ -75,9 +80,12 @@
           </div>
         } @else {
           <div class="dashboard-cards dashboard-cards--tasks">
-            @for (task of p.upcomingTasks; track task.id) {
+            @for (task of p.upcomingTasks; track task.id; let i = $index) {
               <article
-                class="dashboard-task-card"
+                class="dashboard-task-card app-card-interactive"
+                appAnimateIn
+                animation="fadeInUp"
+                [delayMs]="120 + i * 55"
                 [class.dashboard-task-card--urgent]="isDueUrgent(task.dueDate)"
               >
                 <div class="dashboard-task-card__body">
@@ -98,7 +106,13 @@
         }
       </section>
 
-      <section class="dashboard-section" aria-labelledby="quarter-heading">
+      <section
+        class="dashboard-section"
+        aria-labelledby="quarter-heading"
+        appAnimateIn
+        animation="fadeInUp"
+        [delayMs]="160"
+      >
         <div class="dashboard-section-head">
           <h2 id="quarter-heading" class="dashboard-section-head__title">
             <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
@@ -118,8 +132,13 @@
           </div>
         } @else {
           <div class="dashboard-cards dashboard-cards--subjects">
-            @for (row of p.quarterSubjects; track row.id) {
-              <article class="dashboard-subject-card">
+            @for (row of p.quarterSubjects; track row.id; let i = $index) {
+              <article
+                class="dashboard-subject-card app-card-interactive"
+                appAnimateIn
+                animation="fadeInUp"
+                [delayMs]="200 + i * 55"
+              >
                 <header class="dashboard-subject-card__header">
                   <h3 class="dashboard-subject-card__name">{{ row.name }}</h3>
                   <span class="dashboard-subject-card__chip">{{
@@ -165,7 +184,7 @@
   <!-- Ayuda: cómo usar la app -->
   <ion-fab slot="fixed" vertical="bottom" horizontal="start">
     <ion-fab-button
-      class="dashboard-fab-help"
+      class="dashboard-fab-help app-pressable"
       aria-label="Ayuda: qué hacer en la app"
       (click)="openHelp()"
     >
@@ -178,10 +197,8 @@
   <ng-template>
     <ion-header>
       <ion-toolbar>
+        <app-student-nav-back [actionMode]="true" (dismiss)="closeHelp()" />
         <ion-title>Cómo usar la app</ion-title>
-        <ion-buttons slot="end">
-          <ion-button fill="clear" (click)="closeHelp()">Cerrar</ion-button>
-        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding dashboard-help-content">

@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <app-student-menu-buttons />
+    <app-student-nav-back defaultHref="/tabs/tab1" />
     <ion-title>Mis profesores</ion-title>
     <ion-buttons slot="end">
       <ion-button
@@ -17,7 +17,7 @@
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <app-student-menu-buttons />
+      <app-student-nav-back defaultHref="/tabs/tab1" />
       <ion-title size="large">Mis profesores</ion-title>
       <ion-buttons slot="end">
         <ion-button
@@ -143,10 +143,8 @@
   <ng-template>
     <ion-header>
       <ion-toolbar>
+        <app-student-nav-back [actionMode]="true" (dismiss)="closeCreateModal()" />
         <ion-title>Nuevo profesor</ion-title>
-        <ion-buttons slot="end">
-          <ion-button fill="clear" (click)="closeCreateModal()">Cerrar</ion-button>
-        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">

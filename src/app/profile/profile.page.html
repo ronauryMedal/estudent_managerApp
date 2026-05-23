@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <app-student-menu-buttons />
+    <app-student-nav-back defaultHref="/tabs/tab1" />
     <ion-title>Mi perfil</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -8,7 +8,7 @@
 <ion-content [fullscreen]="true" class="profile-content">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <app-student-menu-buttons />
+      <app-student-nav-back defaultHref="/tabs/tab1" />
       <ion-title size="large">Mi perfil</ion-title>
     </ion-toolbar>
   </ion-header>
@@ -35,7 +35,13 @@
     }
 
     @if (profile(); as user) {
-      <section class="profile-hero" aria-label="Foto de perfil">
+      <section
+        class="profile-hero"
+        aria-label="Foto de perfil"
+        appAnimateIn
+        animation="fadeIn"
+        [delayMs]="0"
+      >
         <div class="profile-hero__avatar-wrap">
           <ion-avatar class="profile-hero__avatar">
             @if (avatarSrc()) {
@@ -91,7 +97,12 @@
         </p>
       </section>
 
-      <section class="profile-card">
+      <section
+        class="profile-card"
+        appAnimateIn
+        animation="fadeInUp"
+        [delayMs]="80"
+      >
         <h2 class="profile-card__title">Datos personales</h2>
         <dl class="profile-dl">
           <div class="profile-dl__row">
@@ -113,7 +124,12 @@
         </dl>
       </section>
 
-      <section class="profile-card">
+      <section
+        class="profile-card"
+        appAnimateIn
+        animation="fadeInUp"
+        [delayMs]="140"
+      >
         <h2 class="profile-card__title">Plan académico</h2>
         @if (careerLine()) {
           <p class="profile-career">{{ careerLine() }}</p>

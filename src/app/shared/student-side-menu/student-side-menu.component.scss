@@ -11,7 +11,7 @@
 .side-menu-profile {
   padding: 1.25rem 1rem 1rem;
   text-align: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--app-border);
 }
 
 .side-menu-profile--link {
@@ -42,7 +42,7 @@
   width: 88px;
   height: 88px;
   margin: 0 auto 0.75rem;
-  border: 2px solid rgba(0, 0, 0, 0.08);
+  border: 2px solid var(--app-border);
 }
 
 .side-menu-profile__avatar img {
@@ -59,12 +59,12 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--ion-color-dark, #222428);
-  background: var(--ion-color-light, #f4f5f8);
+  background: var(--app-surface-elevated);
 }
 
 .side-menu-profile__placeholder-icon {
   font-size: 4rem;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
   margin-bottom: 0.5rem;
 }
 
@@ -73,13 +73,13 @@
   font-size: 1.125rem;
   font-weight: 700;
   line-height: 1.25;
-  color: var(--ion-text-color, #1e1e1e);
+  color: var(--ion-text-color);
 }
 
 .side-menu-profile__email {
   margin: 0.35rem 0 0;
   font-size: 0.875rem;
-  color: var(--ion-color-medium-shade, #616161);
+  color: var(--app-text-secondary);
   word-break: break-word;
 }
 
@@ -89,7 +89,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
 }
 
 .side-menu-list {
@@ -118,7 +118,7 @@
   margin: 0.15rem 0 0;
   font-size: 0.75rem;
   font-weight: 400;
-  color: var(--ion-color-medium-shade, #616161);
+  color: var(--app-text-secondary);
 }
 
 .side-menu-list ion-icon {
@@ -129,7 +129,7 @@
 .side-menu-footer {
   margin-top: auto;
   padding-top: 1rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--app-border);
 }
 
 .side-menu-footer ion-list {

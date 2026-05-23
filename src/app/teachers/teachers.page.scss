@@ -9,8 +9,8 @@
   padding: 0.65rem 0.75rem;
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: var(--ion-color-medium-shade, #616161);
-  background: var(--ion-color-light, #f4f5f8);
+  color: var(--app-text-secondary);
+  background: var(--app-surface-elevated);
   border-radius: 10px;
 
   code {
@@ -25,7 +25,7 @@
   margin-bottom: 1rem;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--ion-text-color, #1e1e1e);
+  color: var(--ion-text-color);
 
   ion-icon {
     font-size: 1.25rem;
@@ -66,8 +66,8 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--ion-color-dark, #222428);
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
 }
 
 .teachers-card__name {
@@ -82,7 +82,7 @@
   gap: 0.35rem;
   margin: 0.25rem 0 0;
   font-size: 0.875rem;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
 
   ion-icon {
     flex-shrink: 0;
@@ -101,7 +101,7 @@
   gap: 0.75rem;
   padding: 2rem 1rem;
   text-align: center;
-  color: var(--ion-color-medium, #92949c);
+  color: var(--app-text-muted);
 
   p {
     margin: 0;
@@ -115,7 +115,7 @@
 .teachers-empty {
   padding: 1.5rem 1rem;
   text-align: center;
-  background: var(--ion-color-light, #f4f5f8);
+  background: var(--app-surface-elevated);
   border-radius: 12px;
 }
 
@@ -129,7 +129,7 @@
   margin: 0 0 1rem;
   font-size: 0.9rem;
   line-height: 1.45;
-  color: var(--ion-color-medium-shade, #616161);
+  color: var(--app-text-secondary);
 }
 
 .field-error {

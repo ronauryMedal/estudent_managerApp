@@ -13,7 +13,6 @@
 <ion-content [fullscreen]="true" class="tab2-ion-content">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <app-student-menu-buttons />
       <ion-title size="large">Tareas</ion-title>
       <ion-buttons slot="end">
         <ion-button fill="clear" aria-label="Nueva tarea" (click)="openCreateModal()">
@@ -58,24 +57,48 @@
         </p>
       </div>
     } @else {
-      <ion-list class="tasks-list" lines="none">
-        @for (task of tasks(); track taskTrackKey(task)) {
-          <ion-item class="tasks-card" lines="none">
-            <ion-label>
+      <div class="tasks-cards" role="list">
+        @for (task of tasks(); track taskTrackKey(task); let i = $index) {
+          <article
+            class="tasks-card app-card-interactive"
+            [ngClass]="subjectAccentClass(task.subjectId)"
+            [class.tasks-card--urgent]="isDueUrgent(task.dueDate)"
+            role="listitem"
+            appAnimateIn
+            animation="fadeInUp"
+            [delayMs]="60 + i * 45"
+          >
+            <div class="tasks-card__accent" aria-hidden="true"></div>
+
+            <div class="tasks-card__main">
+              <header class="tasks-card__header">
+                <span class="tasks-card__chip">
+                  <ion-icon name="book-outline" aria-hidden="true"></ion-icon>
+                  {{ subjectLabel(task.subjectId) }}
+                </span>
+                <span
+                  class="tasks-card__badge"
+                  [attr.data-tone]="dueTone(task.dueDate)"
+                >
+                  {{ dueRelativeLabel(task.dueDate) }}
+                </span>
+              </header>
+
               <h2 class="tasks-card__title">{{ task.title }}</h2>
-              <p class="tasks-card__meta">
+
+              <time class="tasks-card__due" [attr.datetime]="task.dueDate">
                 <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
                 {{ formatDue(task.dueDate) }}
-              </p>
-              <p class="tasks-card__subject">{{ subjectLabel(task.subjectId) }}</p>
+              </time>
+
               @if (task.description?.trim()) {
                 <p class="tasks-card__desc">{{ task.description }}</p>
               }
-            </ion-label>
-            <ion-button
-              slot="end"
-              fill="clear"
-              color="danger"
+            </div>
+
+            <button
+              type="button"
+              class="tasks-card__delete"
               [disabled]="deletingTaskId() === task.id"
               [attr.aria-label]="'Eliminar ' + task.title"
               (click)="confirmDelete(task)"
@@ -83,17 +106,17 @@
               @if (deletingTaskId() === task.id) {
                 <ion-spinner name="crescent" color="danger"></ion-spinner>
               } @else {
-                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
               }
-            </ion-button>
-          </ion-item>
+            </button>
+          </article>
         }
-      </ion-list>
+      </div>
     }
   </div>
 
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button color="dark" aria-label="Nueva tarea" (click)="openCreateModal()">
+    <ion-fab-button color="primary" class="app-pressable" aria-label="Nueva tarea" (click)="openCreateModal()">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
@@ -103,10 +126,8 @@
   <ng-template>
     <ion-header>
       <ion-toolbar>
+        <app-student-nav-back [actionMode]="true" (dismiss)="closeCreateModal()" />
         <ion-title>Nueva tarea</ion-title>
-        <ion-buttons slot="end">
-          <ion-button fill="clear" (click)="closeCreateModal()">Cerrar</ion-button>
-        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">

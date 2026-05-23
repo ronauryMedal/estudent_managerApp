@@ -1,3 +1,4 @@
+import { NgClass } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,7 +10,6 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { AlertController, ToastController } from '@ionic/angular';
 import {
   IonButton,
   IonButtons,
@@ -44,6 +44,8 @@ import {
   calendarOutline,
   chevronForwardOutline,
   closeOutline,
+  locationOutline,
+  personOutline,
   schoolOutline,
   timeOutline,
   trashOutline,
@@ -58,6 +60,7 @@ import {
 } from '../core/models/subject.model';
 import { Teacher } from '../core/models/teacher.model';
 import { AuthService } from '../core/services/auth.service';
+import { StudentNotifyService } from '../core/services/student-notify.service';
 import { StudentCareerService } from '../core/services/student-career.service';
 import { StudentSubjectSchedulesService } from '../core/services/student-subject-schedules.service';
 import { StudentSubjectTeachersService } from '../core/services/student-subject-teachers.service';
@@ -86,10 +89,13 @@ import {
   subjectUsesPhysicalLocation,
 } from '../core/utils/subject-schedule-display';
 import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
+import { StudentNavBackComponent } from '../shared/student-nav-back.component';
+import { AnimateInDirective } from '../shared/animate-in.directive';
 import { dedupeById } from '../core/utils/dedupe-by-id';
 import { dedupeSubjects, subjectContentKey } from '../core/utils/dedupe-subjects';
 import { dedupeTeachers } from '../core/utils/dedupe-teachers';
 import { mergeSubjectForDisplay } from '../core/utils/merge-subject-display';
+import { taskSubjectAccentIndex } from '../core/utils/task-due-display';
 
 export interface EnrolledSubjectRow {
   enrollment: UserApprovedSubjectMine;
@@ -101,7 +107,10 @@ export interface EnrolledSubjectRow {
   templateUrl: 'tab3.page.html',
   styleUrls: ['tab3.page.scss'],
   imports: [
+    NgClass,
     StudentMenuButtonsComponent,
+    StudentNavBackComponent,
+    AnimateInDirective,
     ReactiveFormsModule,
     IonHeader,
     IonToolbar,
@@ -135,8 +144,7 @@ export class Tab3Page {
   private readonly schedulesApi = inject(StudentSubjectSchedulesService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly toast = inject(ToastController);
-  private readonly alert = inject(AlertController);
+  private readonly notify = inject(StudentNotifyService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private loadSub?: Subscription;
@@ -200,6 +208,8 @@ export class Tab3Page {
       addOutline,
       trashOutline,
       chevronForwardOutline,
+      locationOutline,
+      personOutline,
       timeOutline,
       calendarOutline,
       closeOutline,
@@ -242,6 +252,24 @@ export class Tab3Page {
     return m && m in SUBJECT_MODALITY_LABELS
       ? SUBJECT_MODALITY_LABELS[m as SubjectModality]
       : '—';
+  }
+
+  subjectAccentClass(subjectId: string): string {
+    return `subjects-card--accent-${taskSubjectAccentIndex(subjectId)}`;
+  }
+
+  schedulePreview(sub: Subject): string {
+    const lines = this.scheduleLines(sub);
+    if (!lines.length) {
+      return '';
+    }
+    return lines.length === 1
+      ? lines[0]!
+      : `${lines[0]} · +${lines.length - 1} más`;
+  }
+
+  locationPreview(sub: Subject): string {
+    return this.locationLines(sub).join(' · ');
   }
 
   teacherNamesLine(sub: Subject): string {
@@ -362,23 +390,12 @@ export class Tab3Page {
             endTime: '10:00',
             room: '',
           });
-          const t = await this.toast.create({
-            message: 'Bloque horario añadido.',
-            duration: 2200,
-            color: 'success',
-            position: 'bottom',
-          });
-          await t.present();
+          void this.notify.success('Bloque horario añadido.');
         },
-        error: async () => {
-          const t = await this.toast.create({
-            message:
-              'No se pudo guardar el horario. Revisá día, horas y que la API esté actualizada.',
-            duration: 4000,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+        error: () => {
+          void this.notify.error(
+            'No se pudo guardar el horario. Revisá día, horas y que la API esté actualizada.',
+          );
         },
       });
   }
@@ -390,19 +407,17 @@ export class Tab3Page {
       return;
     }
 
-    const alert = await this.alert.create({
+    const ok = await this.notify.confirm({
       header: 'Quitar bloque',
       message: `¿Eliminar «${this.scheduleBlockLabel(block)}»?`,
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        { text: 'Eliminar', role: 'destructive' },
-      ],
+      confirmText: 'Eliminar',
+      destructive: true,
+      overModal: true,
     });
-    await alert.present();
-    const { role } = await alert.onDidDismiss();
-    if (role === 'destructive') {
-      this.deleteScheduleBlock(sub.id, scheduleId);
+    if (!ok) {
+      return;
     }
+    this.deleteScheduleBlock(sub.id, scheduleId);
   }
 
   private deleteScheduleBlock(subjectId: string, scheduleId: string): void {
@@ -411,24 +426,12 @@ export class Tab3Page {
       .delete(subjectId, scheduleId)
       .pipe(finalize(() => this.scheduleDeletingId.set(null)))
       .subscribe({
-        next: async () => {
+        next: () => {
           this.loadDetailSchedules(subjectId);
-          const t = await this.toast.create({
-            message: 'Bloque horario eliminado.',
-            duration: 2200,
-            color: 'success',
-            position: 'bottom',
-          });
-          await t.present();
+          void this.notify.success('Bloque horario eliminado.');
         },
-        error: async () => {
-          const t = await this.toast.create({
-            message: 'No se pudo eliminar el bloque.',
-            duration: 2800,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+        error: () => {
+          void this.notify.error('No se pudo eliminar el bloque.');
         },
       });
   }
@@ -496,15 +499,9 @@ export class Tab3Page {
 
   openCreateModal(): void {
     if (this.myCareersList().length === 0) {
-      void this.toast
-        .create({
-          message:
-            'Crea primero una carrera en tu plan (API: POST /careers/me) para poder añadir materias.',
-          duration: 3800,
-          color: 'warning',
-          position: 'bottom',
-        })
-        .then((t) => t.present());
+      void this.notify.warning(
+        'Creá primero una carrera en tu plan para poder añadir materias.',
+      );
       return;
     }
     const first = this.myCareersList()[0]!.id;
@@ -689,37 +686,27 @@ export class Tab3Page {
         }),
       )
       .subscribe({
-        next: async (result) => {
+        next: (result) => {
           const linkFailed =
             result && typeof result === 'object' && 'linkFailed' in result
               ? (result as { linkFailed: boolean }).linkFailed
               : false;
-          let message = 'Materia creada en tu plan.';
           if (linkFailed) {
-            message =
-              'Materia creada, pero no se pudo enlazar el profesor. Probá desde el detalle de la materia.';
+            void this.notify.warning(
+              'Materia creada, pero no se pudo enlazar el profesor. Probá desde el detalle de la materia.',
+            );
           } else if (teacherId) {
-            message = 'Materia creada y profesor enlazado.';
+            void this.notify.success('Materia creada y profesor enlazado.');
+          } else {
+            void this.notify.success('Materia creada en tu plan.');
           }
-          const t = await this.toast.create({
-            message,
-            duration: 2800,
-            color: linkFailed ? 'warning' : 'success',
-            position: 'bottom',
-          });
-          await t.present();
           this.closeCreateModal();
           this.reload();
         },
-        error: async () => {
-          const t = await this.toast.create({
-            message:
-              'No se pudo crear la materia. El careerId debe ser una carrera que tú creaste.',
-            duration: 4000,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+        error: () => {
+          void this.notify.error(
+            'No se pudo crear la materia. El careerId debe ser una carrera que vos creaste.',
+          );
         },
       });
   }
@@ -736,14 +723,7 @@ export class Tab3Page {
     }
     const teacherId = this.detailTeacherId();
     if (!teacherId) {
-      void this.toast
-        .create({
-          message: 'Elegí un profesor de tu lista.',
-          duration: 2200,
-          color: 'warning',
-          position: 'bottom',
-        })
-        .then((t) => t.present());
+      void this.notify.warning('Elegí un profesor de tu lista.');
       return;
     }
     this.actionBusyId.set(sub.id);
@@ -751,25 +731,14 @@ export class Tab3Page {
       .linkMine({ subjectId: sub.id, teacherId })
       .pipe(finalize(() => this.actionBusyId.set(null)))
       .subscribe({
-        next: async () => {
-          const t = await this.toast.create({
-            message: 'Profesor enlazado a la materia.',
-            duration: 2200,
-            color: 'success',
-            position: 'bottom',
-          });
-          await t.present();
+        next: () => {
+          void this.notify.success('Profesor enlazado a la materia.');
           this.reload();
         },
-        error: async () => {
-          const t = await this.toast.create({
-            message:
-              'No se pudo enlazar. Usá un profesor que creaste en Profesores.',
-            duration: 3600,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+        error: () => {
+          void this.notify.error(
+            'No se pudo enlazar. Usá un profesor que creaste en Profesores.',
+          );
         },
       });
   }
@@ -783,26 +752,15 @@ export class Tab3Page {
       .enroll({ subjectId })
       .pipe(finalize(() => this.actionBusyId.set(null)))
       .subscribe({
-        next: async () => {
-          const t = await this.toast.create({
-            message: 'Materia añadida a tu avance.',
-            duration: 2200,
-            color: 'success',
-            position: 'bottom',
-          });
-          await t.present();
+        next: () => {
+          void this.notify.success('Materia añadida a tu avance.');
           this.closeDetail();
           this.reload();
         },
-        error: async () => {
-          const t = await this.toast.create({
-            message:
-              'No se pudo registrar. La materia debe existir en tu plan y no estar ya en tu lista.',
-            duration: 3600,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+        error: () => {
+          void this.notify.error(
+            'No se pudo registrar. La materia debe existir en tu plan y no estar ya en tu lista.',
+          );
         },
       });
   }
@@ -814,24 +772,18 @@ export class Tab3Page {
     }
 
     const inAdvance = !!this.detailEnrollment();
-    const alert = await this.alert.create({
+    const ok = await this.notify.confirm({
       header: 'Eliminar materia',
-      cssClass: 'alert-over-modal',
       message: inAdvance
         ? `¿Eliminar «${sub.name}» del plan? También desaparecerá de tu avance.`
         : `¿Eliminar «${sub.name}» del plan? Esta acción no se puede deshacer.`,
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Eliminar',
-          role: 'destructive',
-          handler: () => {
-            this.deleteSubject(sub);
-          },
-        },
-      ],
+      confirmText: 'Eliminar',
+      destructive: true,
+      overModal: true,
     });
-    await alert.present();
+    if (ok) {
+      this.deleteSubject(sub);
+    }
   }
 
   private deleteSubject(subject: Subject): void {
@@ -871,60 +823,40 @@ export class Tab3Page {
         finalize(() => this.deletingFromPlanId.set(null)),
       )
       .subscribe({
-        next: async () => {
-          const t = await this.toast.create({
-            message: 'Materia eliminada del plan.',
-            duration: 2200,
-            color: 'success',
-            position: 'bottom',
-          });
-          await t.present();
+        next: () => {
+          void this.notify.success('Materia eliminada del plan.');
           this.closeDetail();
           this.reload();
         },
-        error: async (err: HttpErrorResponse) => {
+        error: (err: HttpErrorResponse) => {
           let message = 'No se pudo eliminar la materia.';
-          const apiMsg =
-            typeof err.error === 'object' &&
-            err.error &&
-            'message' in err.error
-              ? String((err.error as { message: unknown }).message)
-              : typeof err.error === 'string'
-                ? err.error
-                : '';
           if (err.status === 409 || err.status === 500) {
             message =
               'No se puede eliminar: quitá tareas y enlaces de profesor, o reiniciá el servidor API actualizado.';
           } else if (err.status === 403 || err.status === 404) {
             message =
               'No tenés permiso para eliminar esta materia o ya no existe en el plan.';
-          } else if (apiMsg) {
-            message = apiMsg;
+          } else {
+            message = this.notify.parseHttpMessage(
+              err,
+              'No se pudo eliminar la materia.',
+            );
           }
-          const t = await this.toast.create({
-            message,
-            duration: 3600,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+          void this.notify.error(message);
           this.reload();
         },
       });
   }
 
   async confirmUnenroll(row: EnrolledSubjectRow): Promise<void> {
-    const alert = await this.alert.create({
+    const ok = await this.notify.confirm({
       header: 'Quitar materia',
       message: `¿Dejar de cursar «${row.subject.name}»?`,
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        { text: 'Quitar', role: 'destructive' },
-      ],
+      confirmText: 'Quitar',
+      destructive: true,
+      overModal: true,
     });
-    await alert.present();
-    const { role } = await alert.onDidDismiss();
-    if (role === 'destructive') {
+    if (ok) {
       this.unenroll(row.enrollment.id);
     }
   }
@@ -935,25 +867,13 @@ export class Tab3Page {
       .unenroll(enrollmentId)
       .pipe(finalize(() => this.actionBusyId.set(null)))
       .subscribe({
-        next: async () => {
-          const t = await this.toast.create({
-            message: 'Materia quitada de tu lista.',
-            duration: 2200,
-            color: 'success',
-            position: 'bottom',
-          });
-          await t.present();
+        next: () => {
+          void this.notify.success('Materia quitada de tu lista.');
           this.closeDetail();
           this.reload();
         },
-        error: async () => {
-          const t = await this.toast.create({
-            message: 'No se pudo quitar la materia.',
-            duration: 2800,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+        error: () => {
+          void this.notify.error('No se pudo quitar la materia.');
         },
       });
   }

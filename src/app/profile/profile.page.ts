@@ -12,7 +12,6 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
-import { ToastController } from '@ionic/angular';
 import { Subscription, forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
@@ -24,13 +23,15 @@ import {
 
 import { User } from '../core/models/user.model';
 import { AuthService } from '../core/services/auth.service';
+import { StudentNotifyService } from '../core/services/student-notify.service';
 import {
   StudentProfileService,
   UserCareerMine,
 } from '../core/services/student-profile.service';
 import { userInitials } from '../core/utils/user-initials';
 import { resolveUserPhotoUrl } from '../core/utils/user-photo-url';
-import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
+import { StudentNavBackComponent } from '../shared/student-nav-back.component';
+import { AnimateInDirective } from '../shared/animate-in.directive';
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const ALLOWED_PHOTO_TYPES = new Set([
@@ -44,7 +45,8 @@ const ALLOWED_PHOTO_TYPES = new Set([
   templateUrl: './profile.page.html',
   styleUrls: ['./profile.page.scss'],
   imports: [
-    StudentMenuButtonsComponent,
+    StudentNavBackComponent,
+    AnimateInDirective,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -60,7 +62,7 @@ const ALLOWED_PHOTO_TYPES = new Set([
 export class ProfilePage {
   private readonly auth = inject(AuthService);
   private readonly profileApi = inject(StudentProfileService);
-  private readonly toast = inject(ToastController);
+  private readonly notify = inject(StudentNotifyService);
   private readonly destroyRef = inject(DestroyRef);
 
   private loadSub?: Subscription;
@@ -168,14 +170,11 @@ export class ProfilePage {
     }
 
     if (!ALLOWED_PHOTO_TYPES.has(file.type)) {
-      void this.showToast(
-        'Formato no permitido. Usá JPEG, PNG o WebP.',
-        'warning',
-      );
+      void this.notify.warning('Formato no permitido. Usá JPEG, PNG o WebP.');
       return;
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      void this.showToast('La imagen no puede superar 5 MB.', 'warning');
+      void this.notify.warning('La imagen no puede superar 5 MB.');
       return;
     }
 
@@ -185,12 +184,12 @@ export class ProfilePage {
       .uploadPhoto(file)
       .pipe(finalize(() => this.photoBusy.set(false)))
       .subscribe({
-        next: async (user) => {
+        next: (user) => {
           this.applyProfileUser(user, true);
-          await this.showToast('Foto de perfil actualizada.', 'success');
+          void this.notify.success('Foto de perfil actualizada.');
         },
-        error: async (err: HttpErrorResponse) => {
-          await this.showToast(this.photoErrorMessage(err), 'danger');
+        error: (err: HttpErrorResponse) => {
+          void this.notify.error(this.photoErrorMessage(err));
         },
       });
   }
@@ -206,12 +205,12 @@ export class ProfilePage {
       .deletePhoto()
       .pipe(finalize(() => this.photoBusy.set(false)))
       .subscribe({
-        next: async (user) => {
+        next: (user) => {
           this.applyProfileUser(user, true);
-          await this.showToast('Foto de perfil eliminada.', 'success');
+          void this.notify.success('Foto de perfil eliminada.');
         },
-        error: async (err: HttpErrorResponse) => {
-          await this.showToast(this.photoErrorMessage(err), 'danger');
+        error: (err: HttpErrorResponse) => {
+          void this.notify.error(this.photoErrorMessage(err));
         },
       });
   }
@@ -253,16 +252,4 @@ export class ProfilePage {
     this.auth.updateCurrentUser(user);
   }
 
-  private async showToast(
-    message: string,
-    color: 'success' | 'warning' | 'danger',
-  ): Promise<void> {
-    const t = await this.toast.create({
-      message,
-      duration: 2800,
-      color,
-      position: 'bottom',
-    });
-    await t.present();
-  }
 }

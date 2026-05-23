@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular';
+import { AlertController } from '@ionic/angular';
 import {
   IonButton,
   IonButtons,
@@ -40,17 +40,18 @@ import { finalize } from 'rxjs/operators';
 
 import { Teacher } from '../core/models/teacher.model';
 import { StudentSubjectTeachersService } from '../core/services/student-subject-teachers.service';
+import { StudentNotifyService } from '../core/services/student-notify.service';
 import { StudentTeachersService } from '../core/services/student-teachers.service';
 import { dedupeById } from '../core/utils/dedupe-by-id';
 import { dedupeTeachers } from '../core/utils/dedupe-teachers';
 import { userInitials } from '../core/utils/user-initials';
-import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
+import { StudentNavBackComponent } from '../shared/student-nav-back.component';
 
 @Component({
   selector: 'app-teachers',
   standalone: true,
   imports: [
-    StudentMenuButtonsComponent,
+    StudentNavBackComponent,
     ReactiveFormsModule,
     IonHeader,
     IonToolbar,
@@ -79,7 +80,7 @@ export class TeachersPage {
   private readonly subjectTeachers = inject(StudentSubjectTeachersService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly toast = inject(ToastController);
+  private readonly notify = inject(StudentNotifyService);
   private readonly alert = inject(AlertController);
   private readonly destroyRef = inject(DestroyRef);
   private loadSub?: Subscription;
@@ -199,25 +200,13 @@ export class TeachersPage {
       })
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
-        next: async () => {
+        next: () => {
           this.closeCreateModal();
           this.load();
-          const t = await this.toast.create({
-            message: 'Profesor guardado.',
-            duration: 2200,
-            color: 'success',
-            position: 'bottom',
-          });
-          await t.present();
+          void this.notify.success('Profesor guardado.');
         },
-        error: async () => {
-          const t = await this.toast.create({
-            message: 'No se pudo crear el profesor.',
-            duration: 3200,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+        error: () => {
+          void this.notify.error('No se pudo crear el profesor.');
         },
       });
   }
@@ -247,8 +236,9 @@ export class TeachersPage {
 
     if (assignmentCount > 0) {
       const blocked = await this.alert.create({
+        mode: 'ios',
         header: 'No se puede eliminar',
-        cssClass: 'alert-over-modal',
+        cssClass: 'app-alert app-alert--neutral alert-over-modal',
         message:
           assignmentCount === 1
             ? `«${teacher.name}» está asignado a una materia. Primero desasignalo desde la pestaña Materias (abrí la materia y cambiá o quitá el profesor). Después podés eliminarlo acá.`
@@ -269,8 +259,9 @@ export class TeachersPage {
 
     const teacherId = teacher.id;
     const alert = await this.alert.create({
+      mode: 'ios',
       header: 'Eliminar profesor',
-      cssClass: 'alert-over-modal',
+      cssClass: 'app-alert app-alert--destructive alert-over-modal',
       message: `¿Eliminar a «${teacher.name}»? Esta acción no se puede deshacer.`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
@@ -297,17 +288,11 @@ export class TeachersPage {
       .deleteMyTeacher(teacherId)
       .pipe(finalize(() => this.deletingTeacherId.set(null)))
       .subscribe({
-        next: async () => {
+        next: () => {
           this.teachers.update((list) =>
             list.filter((t) => t.id !== teacherId),
           );
-          const t = await this.toast.create({
-            message: 'Profesor eliminado.',
-            duration: 2200,
-            color: 'success',
-            position: 'bottom',
-          });
-          await t.present();
+          void this.notify.success('Profesor eliminado.');
         },
         error: async (err: HttpErrorResponse) => {
           if (err.status === 409) {
@@ -316,16 +301,11 @@ export class TeachersPage {
             );
             return;
           }
-          const t = await this.toast.create({
-            message:
-              err.status === 403
-                ? 'Solo podés eliminar profesores que vos creaste.'
-                : 'No se pudo eliminar el profesor.',
-            duration: 3200,
-            color: 'danger',
-            position: 'bottom',
-          });
-          await t.present();
+          const msg =
+            err.status === 403
+              ? 'Solo podés eliminar profesores que vos creaste.'
+              : 'No se pudo eliminar el profesor.';
+          void this.notify.error(msg);
         },
       });
   }
@@ -333,7 +313,8 @@ export class TeachersPage {
   private async showTeacherAssignedAlert(message: string): Promise<void> {
     const alert = await this.alert.create({
       header: 'Profesor en uso',
-      cssClass: 'alert-over-modal',
+      cssClass: 'app-alert app-alert--neutral alert-over-modal',
+      mode: 'ios',
       message,
       buttons: [
         { text: 'Cerrar', role: 'cancel' },

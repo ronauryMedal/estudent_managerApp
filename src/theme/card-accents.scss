@@ -1,0 +1,75 @@
+/* Acentos de color compartidos entre tarjetas de tareas y materias */
+
+.tasks-card--accent-0,
+.subjects-card--accent-0 {
+  --card-accent: #4f46e5;
+  --card-accent-soft: rgba(79, 70, 229, 0.12);
+}
+
+.tasks-card--accent-1,
+.subjects-card--accent-1 {
+  --card-accent: #0891b2;
+  --card-accent-soft: rgba(8, 145, 178, 0.12);
+}
+
+.tasks-card--accent-2,
+.subjects-card--accent-2 {
+  --card-accent: #059669;
+  --card-accent-soft: rgba(5, 150, 105, 0.12);
+}
+
+.tasks-card--accent-3,
+.subjects-card--accent-3 {
+  --card-accent: #d97706;
+  --card-accent-soft: rgba(217, 119, 6, 0.14);
+}
+
+.tasks-card--accent-4,
+.subjects-card--accent-4 {
+  --card-accent: #db2777;
+  --card-accent-soft: rgba(219, 39, 119, 0.12);
+}
+
+.tasks-card--accent-5,
+.subjects-card--accent-5 {
+  --card-accent: #7c3aed;
+  --card-accent-soft: rgba(124, 58, 237, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tasks-card--accent-0,
+  .subjects-card--accent-0 {
+    --card-accent: #818cf8;
+    --card-accent-soft: rgba(129, 140, 248, 0.2);
+  }
+
+  .tasks-card--accent-1,
+  .subjects-card--accent-1 {
+    --card-accent: #22d3ee;
+    --card-accent-soft: rgba(34, 211, 238, 0.16);
+  }
+
+  .tasks-card--accent-2,
+  .subjects-card--accent-2 {
+    --card-accent: #34d399;
+    --card-accent-soft: rgba(52, 211, 153, 0.16);
+  }
+
+  .tasks-card--accent-3,
+  .subjects-card--accent-3 {
+    --card-accent: #fbbf24;
+    --card-accent-soft: rgba(251, 191, 36, 0.18);
+  }
+
+  .tasks-card--accent-4,
+  .subjects-card--accent-4 {
+    --card-accent: #f472b6;
+    --card-accent-soft: rgba(244, 114, 182, 0.16);
+  }
+
+  .tasks-card--accent-5,
+  .subjects-card--accent-5 {
+    --card-accent: #a78bfa;
+    --card-accent-soft: rgba(167, 139, 250, 0.18);
+  }
+}
