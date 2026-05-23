@@ -7,9 +7,11 @@ export interface QuarterSubjectRow {
   credits: number;
   semesterNumber: number;
   modalityLabel: string;
-  /** Un renglón por bloque horario (ej. "Vie 18:00–20:00 · Lab 2"). */
+  /** Un renglón por bloque horario (ej. "Vie 18:00–20:00 · Aula Lab 2"). */
   scheduleLines: string[];
-  /** Edificio, sección, código de curso; null en virtual o sin datos. */
+  /** Edificio, sección, código; vacío en virtual o sin datos. */
+  locationLines: string[];
+  /** @deprecated Preferir `locationLines` en plantillas. */
   courseDetailLine: string | null;
 }
 

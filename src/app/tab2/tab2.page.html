@@ -59,7 +59,7 @@
       </div>
     } @else {
       <ion-list class="tasks-list" lines="none">
-        @for (task of tasks(); track task.id) {
+        @for (task of tasks(); track taskTrackKey(task)) {
           <ion-item class="tasks-card" lines="none">
             <ion-label>
               <h2 class="tasks-card__title">{{ task.title }}</h2>

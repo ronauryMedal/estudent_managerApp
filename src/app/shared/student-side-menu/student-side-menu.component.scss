@@ -14,6 +14,26 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
+.side-menu-profile--link {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+}
+
+.side-menu-profile__edit {
+  display: inline-block;
+  margin-top: 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ion-color-primary, #3880ff);
+}
+
 .side-menu-profile--empty {
   padding: 2rem 1rem;
 }

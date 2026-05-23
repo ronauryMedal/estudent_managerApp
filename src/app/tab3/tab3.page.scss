@@ -71,6 +71,21 @@
   color: var(--ion-color-medium, #92949c);
 }
 
+.subjects-item__location {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ion-text-color, #1e1e1e);
+}
+
+.subjects-item__schedule {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ion-color-medium-shade, #616161);
+}
+
 .subjects-item__chev {
   color: var(--ion-color-medium, #92949c);
   font-size: 1.25rem;
@@ -129,11 +144,17 @@
   color: var(--ion-color-medium-shade, #616161);
 }
 
-.subject-detail__course-line {
-  margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--ion-color-medium, #92949c);
+.subject-detail__location {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ion-text-color, #1e1e1e);
+  font-weight: 500;
+
+  li {
+    margin-bottom: 0.15rem;
+  }
 }
 
 .subject-detail__badge {

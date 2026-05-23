@@ -1,0 +1,129 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <app-student-menu-buttons />
+    <ion-title>Mi perfil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="profile-content">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <app-student-menu-buttons />
+      <ion-title size="large">Mi perfil</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-refresher slot="fixed" (ionRefresh)="reload($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="profile-page">
+    @if (loading() && !profile()) {
+      <div class="profile-state">
+        <ion-spinner name="crescent" color="dark"></ion-spinner>
+        <p>Cargando perfil…</p>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="profile-state profile-state--error">
+        <p>{{ errorMessage() }}</p>
+        <ion-button fill="outline" color="dark" (click)="reload()">
+          Reintentar
+        </ion-button>
+      </div>
+    }
+
+    @if (profile(); as user) {
+      <section class="profile-hero" aria-label="Foto de perfil">
+        <div class="profile-hero__avatar-wrap">
+          <ion-avatar class="profile-hero__avatar">
+            @if (avatarSrc()) {
+              <img [src]="avatarSrc()!" [alt]="'Foto de ' + user.name" />
+            } @else {
+              <span class="profile-hero__initials">{{ initials() }}</span>
+            }
+          </ion-avatar>
+          @if (photoBusy()) {
+            <div class="profile-hero__overlay" aria-hidden="true">
+              <ion-spinner name="crescent" color="light"></ion-spinner>
+            </div>
+          }
+        </div>
+
+        <input
+          #photoInput
+          type="file"
+          class="profile-photo-input"
+          accept="image/jpeg,image/png,image/webp"
+          aria-hidden="true"
+          tabindex="-1"
+          (change)="onPhotoSelected($event)"
+        />
+
+        <div class="profile-hero__actions">
+          <ion-button
+            fill="solid"
+            color="dark"
+            size="small"
+            [disabled]="photoBusy()"
+            (click)="openPhotoPicker(photoInput)"
+          >
+            <ion-icon slot="start" name="camera-outline" aria-hidden="true"></ion-icon>
+            {{ hasPhoto() ? 'Cambiar foto' : 'Subir foto' }}
+          </ion-button>
+          @if (hasPhoto()) {
+            <ion-button
+              fill="outline"
+              color="danger"
+              size="small"
+              [disabled]="photoBusy()"
+              (click)="removePhoto()"
+            >
+              <ion-icon slot="start" name="trash-outline" aria-hidden="true"></ion-icon>
+              Quitar foto
+            </ion-button>
+          }
+        </div>
+
+        <p class="profile-hero__hint">
+          JPEG, PNG o WebP · máximo 5 MB
+        </p>
+      </section>
+
+      <section class="profile-card">
+        <h2 class="profile-card__title">Datos personales</h2>
+        <dl class="profile-dl">
+          <div class="profile-dl__row">
+            <dt>Nombre</dt>
+            <dd>{{ user.name }}</dd>
+          </div>
+          <div class="profile-dl__row">
+            <dt>Correo</dt>
+            <dd>{{ user.email }}</dd>
+          </div>
+          <div class="profile-dl__row">
+            <dt>Rol</dt>
+            <dd>{{ roleLabel() }}</dd>
+          </div>
+          <div class="profile-dl__row">
+            <dt>Miembro desde</dt>
+            <dd>{{ formatDate(user.createdAt) }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="profile-card">
+        <h2 class="profile-card__title">Plan académico</h2>
+        @if (careerLine()) {
+          <p class="profile-career">{{ careerLine() }}</p>
+        } @else {
+          <p class="profile-career profile-career--muted">
+            Todavía no tenés un plan activo. Configuralo en
+            <strong>Materias</strong> o al crear tu carrera.
+          </p>
+        }
+      </section>
+    }
+  </div>
+</ion-content>

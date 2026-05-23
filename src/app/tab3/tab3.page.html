@@ -107,6 +107,16 @@
                   {{ sub.credits }} créd. · Cuatri. plan
                   {{ planQuarter(sub) }} · {{ teacherNamesLine(sub) }}
                 </p>
+                @if (locationLines(sub).length) {
+                  <p class="subjects-item__location">
+                    {{ locationLines(sub).join(' · ') }}
+                  </p>
+                }
+                @if (scheduleLines(sub).length) {
+                  <p class="subjects-item__schedule">
+                    {{ scheduleLines(sub).join(' · ') }}
+                  </p>
+                }
               </ion-label>
               <ion-icon
                 slot="end"
@@ -143,6 +153,16 @@
                   {{ row.subject.credits }} créd. · Cuatri. plan
                   {{ planQuarter(row.subject) }}
                 </p>
+                @if (locationLines(row.subject).length) {
+                  <p class="subjects-item__location">
+                    {{ locationLines(row.subject).join(' · ') }}
+                  </p>
+                }
+                @if (scheduleLines(row.subject).length) {
+                  <p class="subjects-item__schedule">
+                    {{ scheduleLines(row.subject).join(' · ') }}
+                  </p>
+                }
               </ion-label>
               <ion-icon
                 slot="end"
@@ -259,10 +279,11 @@
           ) {
             <ion-item>
               <ion-input
-                label="Edificio / aula"
+                label="Edificio"
                 labelPlacement="stacked"
                 type="text"
                 formControlName="building"
+                placeholder="Ej. Edificio Central, Bloque B…"
               ></ion-input>
             </ion-item>
             <ion-item>
@@ -335,8 +356,12 @@
             <span class="subject-detail__chip">Cuat. {{ planQuarter(sub) }}</span>
           </div>
           <p class="subject-detail__career">{{ careerLabel(sub.careerId) }}</p>
-          @if (courseLine(sub)) {
-            <p class="subject-detail__course-line">{{ courseLine(sub) }}</p>
+          @if (locationLines(sub).length) {
+            <ul class="subject-detail__location">
+              @for (line of locationLines(sub); track $index) {
+                <li>{{ line }}</li>
+              }
+            </ul>
           }
           @if (detailEnrollment()) {
             <p class="subject-detail__badge">En tu avance</p>

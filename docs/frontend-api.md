@@ -33,10 +33,13 @@ Response (resumen):
   "user": {
     "id": "uuid",
     "name": "Juan Perez",
-    "email": "usuario@ejemplo.com"
+    "email": "usuario@ejemplo.com",
+    "photoUrl": null
   }
 }
 ```
+
+`photoUrl` es `null` hasta que subas una foto con `POST /users/me/photo`.
 
 ### `POST /auth/login`
 
@@ -58,12 +61,17 @@ Response (resumen):
     "id": "uuid",
     "name": "Juan Perez",
     "email": "usuario@ejemplo.com",
+    "photoUrl": "/uploads/avatars/uuid.jpg",
     "careers": null
   }
 }
 ```
 
 `user.careers` puede traer la inscripción activa (`UserCareer`) si existe; no confundir con la lista de planes creados (`GET /careers/me`).
+
+Para mostrar la imagen en el front, concatena base URL + `photoUrl`:
+
+`http://localhost:3000` + `/uploads/avatars/uuid.jpg` → `http://localhost:3000/uploads/avatars/uuid.jpg`
 
 ---
 
@@ -79,6 +87,7 @@ flowchart LR
   D --> E[POST /subject-teachers/me]
   B --> F[GET /user-careers/me]
   C --> G[POST /user-approved-subjects/me]
+  A --> H[GET /dashboard/me]
 ```
 
 | Paso | Endpoint | Qué hace |
@@ -94,8 +103,74 @@ flowchart LR
 | 9 | `GET /user-careers/me` | Ver carrera/cuatrimestre activos. |
 | 10 | `POST /user-careers/me` | Cambiar a otra carrera **que tú creaste** (opcional). |
 | 11 | `POST /user-approved-subjects/me` | Marcar materia en tu malla (plan activo). |
+| 12 | `GET /users/me` | Ver perfil (incluye `photoUrl`). |
+| 13 | `POST /users/me/photo` | Subir o reemplazar foto de perfil. |
+| **Inicio** | **`GET /dashboard/me`** | **Una sola llamada:** tareas pendientes + materias del cuatrimestre actual con horarios y profesores. |
 
 **Importante:** el estudiante **no** usa `GET /teachers` ni `POST /teachers` (solo admin). Para profesores propios: siempre **`/teachers/me`**.
+
+---
+
+## Pantalla de inicio (`GET /dashboard/me`)
+
+Pensado para la **home** del estudiante: UI moderna en Ionic usando estos datos.
+
+| Método | Ruta | Rol |
+|--------|------|-----|
+| `GET` | `/dashboard/me` | **STUDENT** |
+
+**Headers:** `Authorization: Bearer <token>`
+
+### Respuesta (forma general)
+
+```json
+{
+  "userCareer": {
+    "id": "uuid",
+    "currentSemester": 1,
+    "career": { "id": "...", "name": "...", "institution": "...", "totalSemester": 12 },
+    "semesters": []
+  },
+  "currentQuarter": 1,
+  "pendingTasks": [
+    {
+      "id": "...",
+      "title": "...",
+      "dueDate": "...",
+      "isCompleted": false,
+      "subjectId": "...",
+      "subject": {
+        "name": "Programación I",
+        "schedules": [{ "weekday": "MONDAY", "startTime": "...", "endTime": "...", "room": null }],
+        "career": { "id": "...", "name": "..." }
+      }
+    }
+  ],
+  "subjectsThisQuarter": [
+    {
+      "id": "...",
+      "name": "Programación I",
+      "quarterNumber": 1,
+      "modality": "IN_PERSON",
+      "career": {},
+      "schedules": [],
+      "teachers": [{ "teacher": { "name": "...", "email": null } }]
+    }
+  ]
+}
+```
+
+- **`currentQuarter`**: igual que `userCareer.currentSemester`; las materias cumplen `quarterNumber === currentQuarter` y pertenecen a la carrera activa.
+- **`pendingTasks`**: hasta 50 con `isCompleted === false`, ordenadas por `dueDate`.
+- Sin `UserCareer`: `userCareer` y `currentQuarter` en `null`, `subjectsThisQuarter` vacío; `pendingTasks` igual puede traer datos.
+
+### UI sugerida (Ionic)
+
+1. **Cabecera:** nombre del plan (`userCareer.career.name`) + institución + chip “Cuatrimestre N”.
+2. **Este cuatrimestre:** tarjetas por `subjectsThisQuarter`: materia, modalidad, debajo `schedules` (día traducido + hora inicio–fin + aula).
+3. **Pendientes:** lista de `pendingTasks` con fecha y `subject.name`.
+
+Consumí `GET /dashboard/me` al entrar a la tab Inicio (`ionViewWillEnter` o resolver).
 
 ---
 
@@ -110,6 +185,7 @@ flowchart LR
   - Horarios: `GET/POST/PATCH/DELETE` bajo `/subjects/:subjectId/schedules` si la materia es de **su** carrera.
   - `POST /user-careers/me`: activa o cambia inscripción; solo `careerId` de carreras **creadas por él**.
   - `user-approved-subjects/me`: la materia debe ser de **su** plan y de la **misma carrera** que su `UserCareer` activo.
+  - Foto de perfil: `GET /users/me`, `POST /users/me/photo`, `DELETE /users/me/photo` (solo **STUDENT** para subir/borrar).
 - **Tasks**: JWT; cada usuario solo ve/edita sus tareas.
 
 ### Campos de “dueño” en el modelo
@@ -129,15 +205,108 @@ flowchart LR
 
 ## Users
 
-- `POST /users`
-- `GET /users`
-- `GET /users/:id`
-- `PATCH /users/:id`
-- `DELETE /users/:id`
-- `GET /users/:id/progress` (JWT, admin o propietario)
-- `GET /users/:id/progress/summary` (JWT, admin o propietario)
+| Método | Ruta | Rol | Descripción |
+|--------|------|-----|-------------|
+| `GET` | `/users/me` | JWT | Perfil del usuario autenticado (sin `password`) |
+| `POST` | `/users/me/photo` | **STUDENT** | Subir o reemplazar foto de perfil |
+| `DELETE` | `/users/me/photo` | **STUDENT** | Quitar foto de perfil |
+| `GET` | `/users/:id/progress` | JWT | Progreso académico (admin o propietario) |
+| `GET` | `/users/:id/progress/summary` | JWT | Resumen de progreso (admin o propietario) |
+| `POST` | `/users` | — | Crear usuario |
+| `GET` | `/users` | — | Listar usuarios |
+| `GET` | `/users/:id` | — | Usuario por id |
+| `PATCH` | `/users/:id` | — | Actualizar usuario |
+| `DELETE` | `/users/:id` | — | Eliminar usuario |
 
-## Careers
+### Foto de perfil (`photoUrl`)
+
+El campo `photoUrl` en `User` guarda la **ruta pública** relativa (ej. `/uploads/avatars/{userId}.jpg`). Los archivos se sirven estáticos en:
+
+`{BASE_URL}{photoUrl}` → `http://localhost:3000/uploads/avatars/{userId}.jpg`
+
+**Reglas de subida (`POST /users/me/photo`):**
+
+| Regla | Valor |
+|-------|--------|
+| Content-Type | `multipart/form-data` |
+| Campo del archivo | **`photo`** (obligatorio) |
+| Formatos | JPEG, PNG, WebP |
+| Tamaño máximo | 5 MB |
+| Reemplazo | Si ya tenías foto, se sobrescribe automáticamente |
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response** (ejemplo tras subir):
+
+```json
+{
+  "id": "uuid",
+  "name": "Juan Perez",
+  "email": "usuario@ejemplo.com",
+  "role": "STUDENT",
+  "photoUrl": "/uploads/avatars/uuid.jpg",
+  "createdAt": "2026-05-17T21:00:00.000Z"
+}
+```
+
+**Errores frecuentes:**
+
+| Código | Causa |
+|--------|--------|
+| **400** | Sin archivo, campo distinto de `photo`, formato no permitido o archivo > 5 MB |
+| **401** | Sin token |
+| **403** | Rol distinto de STUDENT en subida/borrado |
+
+### Ejemplo Angular / Ionic (subir foto)
+
+```typescript
+async uploadProfilePhoto(file: File, token: string) {
+  const formData = new FormData();
+  formData.append('photo', file);
+
+  const res = await fetch('http://localhost:3000/users/me/photo', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<{ photoUrl: string | null }>;
+}
+```
+
+**Mostrar avatar en template** (con `apiBase = 'http://localhost:3000'`):
+
+```html
+<ion-avatar>
+  <img
+    [src]="user.photoUrl ? apiBase + user.photoUrl : 'assets/default-avatar.png'"
+    alt="Foto de perfil"
+  />
+</ion-avatar>
+```
+
+Input de archivo (Ionic):
+
+```html
+<input type="file" accept="image/jpeg,image/png,image/webp" (change)="onPhotoSelected($event)" />
+```
+
+```typescript
+async onPhotoSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  const updated = await this.uploadProfilePhoto(file, this.token);
+  this.user.photoUrl = updated.photoUrl;
+}
+```
+
+**Quitar foto:** `DELETE /users/me/photo` (mismo header JWT). La respuesta trae `photoUrl: null`.
+
+**Refrescar perfil:** `GET /users/me` devuelve el usuario completo sin contraseña.
+
+---
 
 Cada carrera tiene **`institution`**. El mismo **nombre** puede repetirse entre instituciones o usuarios; el plan personal se identifica por **`ownerUserId`**.
 
@@ -233,7 +402,7 @@ Body `POST /teachers/me` y `POST /teachers`:
 | `VIRTUAL` | Virtual |
 | `HYBRID` | Híbrida |
 
-Si `modality` es `IN_PERSON` o `HYBRID`, son obligatorios `building` y `section` (strings no vacíos). `courseNumber` es opcional (`null` si no se envía). En `VIRTUAL`, `building`, `section` y `courseNumber` se guardan como `null`.
+Si `modality` es `IN_PERSON` o `HYBRID`, son obligatorios `building`, `section`, `courseNumber` (strings no vacíos). En `VIRTUAL` se guardan como `null`.
 
 **`quarterNumber`**: cuatrimestre en el plan; entre `1` y `totalSemester` de la carrera.
 
@@ -455,7 +624,7 @@ Body admin create:
 | **403** | Rol incorrecto o recurso de otro usuario |
 | **404** | Id inexistente o ruta mal ordenada (usar `/me` antes de `/:id`) |
 | **409** | Duplicado (ej. mismo profesor en la misma materia) |
-| **400** | Validación (cuatrimestre, modalidad, campos obligatorios) |
+| **400** | Validación (cuatrimestre, modalidad, campos obligatorios, foto inválida o demasiado grande) |
 
 ---
 
@@ -485,6 +654,7 @@ El seed imprime IDs útiles en consola. Si falla con tabla inexistente, aplicar 
 - API en Docker: `http://localhost:3000` desde el navegador.
 - Emulador Android: suele requerir `http://10.0.2.2:3000` o la IP de tu PC.
 - Tras cambios en el backend: `docker compose build api && docker compose up -d api`.
+- Las fotos de perfil se persisten en el volumen Docker `uploads_data` (ruta interna `/app/uploads`). No se pierden al reconstruir la imagen, salvo que uses `docker compose down -v`.
 
 ---
 

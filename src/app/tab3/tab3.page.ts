@@ -80,12 +80,15 @@ import {
 import {
   formatSubjectScheduleBlock,
   sortSubjectSchedules,
-  subjectCourseDetailLine,
+  subjectLocationLines,
   subjectScheduleLines,
   subjectScheduleTrackKey,
+  subjectUsesPhysicalLocation,
 } from '../core/utils/subject-schedule-display';
 import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
 import { dedupeById } from '../core/utils/dedupe-by-id';
+import { dedupeSubjects, subjectContentKey } from '../core/utils/dedupe-subjects';
+import { dedupeTeachers } from '../core/utils/dedupe-teachers';
 import { mergeSubjectForDisplay } from '../core/utils/merge-subject-display';
 
 export interface EnrolledSubjectRow {
@@ -266,8 +269,12 @@ export class Tab3Page {
     return subjectScheduleLines(sub);
   }
 
-  courseLine(sub: Subject): string | null {
-    return subjectCourseDetailLine(sub);
+  locationLines(sub: Subject): string[] {
+    return subjectLocationLines(sub);
+  }
+
+  usesPhysicalLocation(sub: Subject): boolean {
+    return subjectUsesPhysicalLocation(sub);
   }
 
   openDetail(
@@ -569,12 +576,12 @@ export class Tab3Page {
             ),
           );
           this.myTeachersList.set(
-            [...myTeachers].sort((a, b) =>
+            dedupeTeachers([...myTeachers]).sort((a, b) =>
               a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
             ),
           );
 
-          const sortedPlan = dedupeById(plan).sort((a, b) =>
+          const sortedPlan = dedupeSubjects(dedupeById(plan)).sort((a, b) =>
             a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
           );
           this.planSubjects.set(sortedPlan);
@@ -590,6 +597,7 @@ export class Tab3Page {
           }
 
           const rows: EnrolledSubjectRow[] = [];
+          const seenSubjectKeys = new Set<string>();
           for (const e of dedupeById(enrollments)) {
             const fromPlan = byId.get(e.subjectId);
             const sub = e.subject
@@ -598,6 +606,11 @@ export class Tab3Page {
             if (!sub) {
               continue;
             }
+            const key = subjectContentKey(sub);
+            if (seenSubjectKeys.has(key)) {
+              continue;
+            }
+            seenSubjectKeys.add(key);
             rows.push({ enrollment: e, subject: sub });
           }
           rows.sort((a, b) =>
@@ -800,7 +813,6 @@ export class Tab3Page {
       return;
     }
 
-    const subjectId = sub.id;
     const inAdvance = !!this.detailEnrollment();
     const alert = await this.alert.create({
       header: 'Eliminar materia',
@@ -814,7 +826,7 @@ export class Tab3Page {
           text: 'Eliminar',
           role: 'destructive',
           handler: () => {
-            this.deleteSubject(subjectId);
+            this.deleteSubject(sub);
           },
         },
       ],
@@ -822,17 +834,42 @@ export class Tab3Page {
     await alert.present();
   }
 
-  private deleteSubject(subjectId: string): void {
-    if (this.deletingFromPlanId() === subjectId) {
+  private deleteSubject(subject: Subject): void {
+    if (this.deletingFromPlanId() === subject.id) {
       return;
     }
 
-    this.deletingFromPlanId.set(subjectId);
-    const enrollmentId = this.detailEnrollment()?.id;
+    const key = subjectContentKey(subject);
+    this.deletingFromPlanId.set(subject.id);
 
-    this.subjectsApi
-      .deleteMySubjectComplete(subjectId, enrollmentId)
-      .pipe(finalize(() => this.deletingFromPlanId.set(null)))
+    forkJoin({
+      plan: this.subjectsApi.getMyPlanSubjects(),
+      enrollments: this.subjectsApi.getMyEnrollments(),
+    })
+      .pipe(
+        switchMap(({ plan, enrollments }) => {
+          const ids = [
+            ...new Set(
+              plan
+                .filter((s) => subjectContentKey(s) === key)
+                .map((s) => s.id)
+                .filter(Boolean),
+            ),
+          ];
+          const toDelete = ids.length > 0 ? ids : [subject.id];
+          return forkJoin(
+            toDelete.map((id) => {
+              const enrollmentId = enrollments.find(
+                (e) => e.subjectId === id,
+              )?.id;
+              return this.subjectsApi
+                .deleteMySubjectComplete(id, enrollmentId)
+                .pipe(catchError(() => of(null)));
+            }),
+          );
+        }),
+        finalize(() => this.deletingFromPlanId.set(null)),
+      )
       .subscribe({
         next: async () => {
           const t = await this.toast.create({
@@ -871,6 +908,7 @@ export class Tab3Page {
             position: 'bottom',
           });
           await t.present();
+          this.reload();
         },
       });
   }

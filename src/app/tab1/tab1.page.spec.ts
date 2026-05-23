@@ -43,8 +43,14 @@ describe('Tab1Page', () => {
                     credits: 4,
                     semesterNumber: 1,
                     modalityLabel: 'Presencial',
-                    scheduleLines: ['Vie 18:00–20:00 · Lab 2'],
-                    courseDetailLine: 'Edificio Central · Sección A · PROG-2020-01',
+                    scheduleLines: ['Vie 18:00–20:00 · Aula Lab 2'],
+                    locationLines: [
+                      'Edificio: Edificio Central',
+                      'Sección: A',
+                      'Código: PROG-2020-01',
+                    ],
+                    courseDetailLine:
+                      'Edificio: Edificio Central · Sección: A · Código: PROG-2020-01',
                   },
                 ],
               }),

@@ -228,11 +228,25 @@
   color: var(--ion-color-medium-shade, #616161);
 }
 
-.dashboard-subject-card__course {
-  margin: 0 0 0.65rem;
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  color: var(--ion-color-medium-shade, #616161);
+.dashboard-subject-card__location-block {
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.65rem;
+  border-radius: 12px;
+  background: rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.06);
+  border: 1px solid rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.12);
+}
+
+.dashboard-subject-card__location-list {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--ion-text-color, #1e1e1e);
+  font-weight: 500;
+
+  li {
+    margin-bottom: 0.2rem;
+  }
 }
 
 .dashboard-subject-card__schedule-block {

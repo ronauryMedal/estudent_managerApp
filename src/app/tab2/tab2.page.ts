@@ -27,8 +27,8 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
-import { Subscription } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { forkJoin, Subscription, of } from 'rxjs';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
 import {
   add,
@@ -42,6 +42,8 @@ import { Task } from '../core/models/task.model';
 import { StudentSubjectsService } from '../core/services/student-subjects.service';
 import { StudentTasksService } from '../core/services/student-tasks.service';
 import { dedupeById } from '../core/utils/dedupe-by-id';
+import { dedupeSubjects } from '../core/utils/dedupe-subjects';
+import { openTasks, taskContentKey } from '../core/utils/dedupe-tasks';
 import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
 
 @Component({
@@ -133,6 +135,10 @@ export class Tab2Page {
     });
   }
 
+  taskTrackKey(task: Task): string {
+    return taskContentKey(task);
+  }
+
   reload(event?: { target?: { complete?: () => void } }): void {
     this.loadSub?.unsubscribe();
     this.loading.set(true);
@@ -148,14 +154,7 @@ export class Tab2Page {
       )
       .subscribe({
         next: (list) => {
-          this.tasks.set(
-            dedupeById(list)
-              .filter((t) => t.completed !== true)
-              .sort(
-                (a, b) =>
-                  new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
-              ),
-          );
+          this.applyTaskList(list);
         },
         error: () => {
           this.errorMessage.set(
@@ -167,7 +166,7 @@ export class Tab2Page {
     this.subjectsApi.getMyPlanSubjects().subscribe({
       next: (subjects) => {
         this.planSubjects.set(
-          dedupeById(subjects).sort((a, b) =>
+          dedupeSubjects(dedupeById(subjects)).sort((a, b) =>
             a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
           ),
         );
@@ -242,13 +241,15 @@ export class Tab2Page {
     this.createSub = this.tasksApi
       .create(body)
       .pipe(
+        switchMap(() => this.tasksApi.list()),
         finalize(() => {
           this.createSubmitting.set(false);
           this.createSub = undefined;
         }),
       )
       .subscribe({
-        next: async () => {
+        next: async (list) => {
+          this.applyTaskList(list);
           const t = await this.toast.create({
             message: 'Tarea creada.',
             duration: 2200,
@@ -257,7 +258,6 @@ export class Tab2Page {
           });
           await t.present();
           this.closeCreateModal();
-          this.reload();
         },
         error: async () => {
           const t = await this.toast.create({
@@ -287,23 +287,47 @@ export class Tab2Page {
     await alert.present();
     const { role } = await alert.onDidDismiss();
     if (role === 'destructive') {
-      this.deleteTask(task.id);
+      this.deleteTask(task);
     }
   }
 
-  private deleteTask(taskId: string): void {
-    if (this.deletingTaskId() === taskId) {
+  private applyTaskList(list: Task[]): void {
+    this.tasks.set(openTasks(dedupeById(list)));
+  }
+
+  private deleteTask(task: Task): void {
+    if (this.deletingTaskId()) {
       return;
     }
 
+    const key = taskContentKey(task);
     this.deleteSub?.unsubscribe();
-    this.deletingTaskId.set(taskId);
+    this.deletingTaskId.set(task.id);
     this.deleteSub = this.tasksApi
-      .delete(taskId)
-      .pipe(finalize(() => this.deletingTaskId.set(null)))
+      .list()
+      .pipe(
+        switchMap((list) => {
+          const ids = [
+            ...new Set(
+              list
+                .filter((t) => taskContentKey(t) === key)
+                .map((t) => t.id)
+                .filter(Boolean),
+            ),
+          ];
+          const toDelete = ids.length > 0 ? ids : [task.id];
+          return forkJoin(
+            toDelete.map((id) =>
+              this.tasksApi.delete(id).pipe(catchError(() => of(null))),
+            ),
+          );
+        }),
+        switchMap(() => this.tasksApi.list()),
+        finalize(() => this.deletingTaskId.set(null)),
+      )
       .subscribe({
-        next: async () => {
-          this.tasks.update((list) => list.filter((t) => t.id !== taskId));
+        next: async (list) => {
+          this.applyTaskList(list);
           const t = await this.toast.create({
             message: 'Tarea eliminada.',
             duration: 2200,

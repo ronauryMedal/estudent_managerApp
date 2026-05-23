@@ -65,6 +65,10 @@ export class StudentSideMenuComponent {
     });
   }
 
+  isProfileRoute(): boolean {
+    return this.router.url.includes('/profile');
+  }
+
   isTeachersRoute(): boolean {
     return this.router.url.includes('/teachers');
   }

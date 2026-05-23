@@ -1,4 +1,4 @@
-import { Subject } from '../models/subject.model';
+import { Subject, SubjectModality } from '../models/subject.model';
 import { SubjectSchedule } from '../models/subject-schedule.model';
 
 const WEEKDAY_ORDER: Record<string, number> = {
@@ -51,7 +51,13 @@ function normWeekday(w: string): string {
   return String(w).toUpperCase();
 }
 
-/** Una línea legible para un bloque (ej. "Vie 18:00–20:00 · Lab 2"). */
+/** Presencial o híbrida: mostrar edificio, sección y aula con etiquetas. */
+export function subjectUsesPhysicalLocation(subject: Subject): boolean {
+  const mod: SubjectModality = subject.modality ?? 'IN_PERSON';
+  return mod === 'IN_PERSON' || mod === 'HYBRID';
+}
+
+/** Una línea legible para un bloque (ej. "Vie 18:00–20:00 · Aula Lab 2"). */
 export function formatSubjectScheduleBlock(b: SubjectSchedule): string {
   const wk = normWeekday(b.weekday);
   const day = WEEKDAY_LABEL_ES[wk] ?? wk.slice(0, 3);
@@ -59,7 +65,8 @@ export function formatSubjectScheduleBlock(b: SubjectSchedule): string {
   const t1 = parseScheduleTimeToHHmm(b.endTime);
   let line = `${day} ${t0}–${t1}`;
   if (b.room?.trim()) {
-    line += ` · ${b.room.trim()}`;
+    const room = b.room.trim();
+    line += ` · Aula ${room}`;
   }
   return line;
 }
@@ -141,17 +148,23 @@ export function subjectScheduleDisplay(subject: Subject): string {
   return 'Horario a confirmar';
 }
 
-/** Línea opcional: edificio, sección, código de curso (presencial/híbrido). */
-export function subjectCourseDetailLine(subject: Subject): string | null {
-  const parts: string[] = [];
+/** Edificio, sección y código; se muestran si hay datos (Inicio, listados). */
+export function subjectLocationLines(subject: Subject): string[] {
+  const lines: string[] = [];
   if (subject.building?.trim()) {
-    parts.push(subject.building.trim());
+    lines.push(`Edificio: ${subject.building.trim()}`);
   }
   if (subject.section?.trim()) {
-    parts.push(`Sección ${subject.section.trim()}`);
+    lines.push(`Sección: ${subject.section.trim()}`);
   }
   if (subject.courseNumber?.trim()) {
-    parts.push(subject.courseNumber.trim());
+    lines.push(`Código: ${subject.courseNumber.trim()}`);
   }
-  return parts.length > 0 ? parts.join(' · ') : null;
+  return lines;
+}
+
+/** Línea compacta: edificio, sección, código de curso (presencial/híbrido). */
+export function subjectCourseDetailLine(subject: Subject): string | null {
+  const lines = subjectLocationLines(subject);
+  return lines.length > 0 ? lines.join(' · ') : null;
 }

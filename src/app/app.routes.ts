@@ -38,6 +38,12 @@ export const routes: Routes = [
           import('./teachers/teachers.page').then((m) => m.TeachersPage),
       },
       {
+        path: 'profile',
+        canActivate: [studentCareerRequiredGuard],
+        loadComponent: () =>
+          import('./profile/profile.page').then((m) => m.ProfilePage),
+      },
+      {
         path: '',
         canActivate: [studentCareerRequiredGuard],
         loadChildren: () =>

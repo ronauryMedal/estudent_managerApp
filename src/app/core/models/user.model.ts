@@ -5,7 +5,9 @@ export interface User {
   name: string;
   email: string;
   role?: UserRole;
-  /** URL pública del avatar cuando el backend la envíe en login/register. */
+  /** Ruta relativa del API, ej. `/uploads/avatars/uuid.jpg`. */
+  photoUrl?: string | null;
+  /** URL absoluta lista para `<img>` (calculada en el front). */
   avatarUrl?: string | null;
   careers?: unknown | null;
   createdAt?: string;

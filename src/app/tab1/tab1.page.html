@@ -126,10 +126,15 @@
                     row.modalityLabel
                   }}</span>
                 </header>
-                @if (row.courseDetailLine) {
-                  <p class="dashboard-subject-card__course">
-                    {{ row.courseDetailLine }}
-                  </p>
+                @if (row.locationLines.length) {
+                  <div class="dashboard-subject-card__location-block">
+                    <span class="dashboard-subject-card__label">Ubicación</span>
+                    <ul class="dashboard-subject-card__location-list">
+                      @for (line of row.locationLines; track $index) {
+                        <li>{{ line }}</li>
+                      }
+                    </ul>
+                  </div>
                 }
                 <div class="dashboard-subject-card__schedule-block">
                   <span class="dashboard-subject-card__label">Horario</span>

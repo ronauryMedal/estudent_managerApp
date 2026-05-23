@@ -10,6 +10,7 @@ import {
   RegisterRequest,
   User,
 } from '../models';
+import { normalizeUser } from '../utils/user-photo-url';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -51,11 +52,19 @@ export class AuthService {
     return this._accessToken();
   }
 
+  /** Actualiza usuario en memoria y localStorage (p. ej. tras subir foto). */
+  updateCurrentUser(user: User): void {
+    const normalized = normalizeUser(user);
+    this._currentUser.set(normalized);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(normalized));
+  }
+
   private persistSession(response: AuthResponse): void {
+    const user = normalizeUser(response.user);
     this._accessToken.set(response.access_token);
-    this._currentUser.set(response.user);
+    this._currentUser.set(user);
     localStorage.setItem(AUTH_TOKEN_KEY, response.access_token);
-    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(response.user));
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
   }
 
   private restoreSessionFromStorage(): void {
@@ -67,7 +76,7 @@ export class AuthService {
     }
 
     try {
-      const user = JSON.parse(rawUser) as User;
+      const user = normalizeUser(JSON.parse(rawUser) as User);
       this._accessToken.set(token);
       this._currentUser.set(user);
     } catch {

@@ -42,6 +42,7 @@ import { Teacher } from '../core/models/teacher.model';
 import { StudentSubjectTeachersService } from '../core/services/student-subject-teachers.service';
 import { StudentTeachersService } from '../core/services/student-teachers.service';
 import { dedupeById } from '../core/utils/dedupe-by-id';
+import { dedupeTeachers } from '../core/utils/dedupe-teachers';
 import { userInitials } from '../core/utils/user-initials';
 import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
 
@@ -150,7 +151,7 @@ export class TeachersPage {
       .subscribe({
         next: (list) => {
           this.teachers.set(
-            dedupeById(list).sort((a, b) =>
+            dedupeTeachers(dedupeById(list)).sort((a, b) =>
               a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
             ),
           );
@@ -198,13 +199,9 @@ export class TeachersPage {
       })
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
-        next: async (created) => {
-          this.teachers.update((list) =>
-            dedupeById([...list, created]).sort((a, b) =>
-              a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
-            ),
-          );
+        next: async () => {
           this.closeCreateModal();
+          this.load();
           const t = await this.toast.create({
             message: 'Profesor guardado.',
             duration: 2200,
