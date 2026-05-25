@@ -23,6 +23,24 @@
   }
 }
 
+.tasks-offline-banner {
+  margin: -0.35rem 0 1rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--app-radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--ion-color-warning-shade, #b45309);
+  background: rgba(var(--ion-color-warning-rgb, 245, 158, 11), 0.14);
+  border: 1px solid rgba(var(--ion-color-warning-rgb, 245, 158, 11), 0.28);
+}
+
+.tasks-offline-banner--online {
+  color: var(--ion-color-primary);
+  background: var(--app-accent-soft);
+  border-color: rgba(var(--ion-color-primary-rgb), 0.18);
+}
+
 .tasks-state {
   display: flex;
   flex-direction: column;
@@ -120,7 +138,7 @@
 .tasks-card__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
@@ -151,6 +169,7 @@
 
 .tasks-card__badge {
   flex-shrink: 0;
+  margin-left: auto;
   padding: 0.28rem 0.5rem;
   font-size: 0.625rem;
   font-weight: 700;
@@ -159,6 +178,18 @@
   border-radius: 8px;
   background: var(--app-chip-bg);
   color: var(--app-chip-text);
+}
+
+.tasks-card__sync-badge {
+  flex-shrink: 0;
+  padding: 0.28rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ion-color-primary);
+  background: var(--app-accent-soft);
 }
 
 .tasks-card__badge[data-tone='danger'] {

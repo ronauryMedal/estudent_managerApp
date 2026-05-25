@@ -32,6 +32,16 @@
       Las fechas próximas también aparecen en <strong>Inicio</strong>.
     </p>
 
+    @if (offlineBannerMessage(); as offlineMessage) {
+      <div
+        class="tasks-offline-banner"
+        [class.tasks-offline-banner--online]="isOnline()"
+        role="status"
+      >
+        {{ offlineMessage }}
+      </div>
+    }
+
     @if (loading() && tasks().length === 0) {
       <div class="tasks-state">
         <ion-spinner name="crescent" color="dark"></ion-spinner>
@@ -76,6 +86,11 @@
                   <ion-icon name="book-outline" aria-hidden="true"></ion-icon>
                   {{ subjectLabel(task.subjectId) }}
                 </span>
+                @if (isPendingTask(task)) {
+                  <span class="tasks-card__sync-badge">
+                    Pendiente
+                  </span>
+                }
                 <span
                   class="tasks-card__badge"
                   [attr.data-tone]="dueTone(task.dueDate)"

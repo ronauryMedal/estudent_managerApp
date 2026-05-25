@@ -9,6 +9,8 @@
  * https://ionicframework.com/docs/layout/global-stylesheets
  */
 
+@use 'sass:meta';
+
 /* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
 
@@ -37,16 +39,16 @@
 @import '@ionic/angular/css/palettes/dark.system.css';
 
 @import 'animate.css';
-@import './theme/motion.scss';
-@import './theme/notify.scss';
-@import './theme/card-accents.scss';
-@import './theme/subject-cards.scss';
+@include meta.load-css('./theme/motion');
+@include meta.load-css('./theme/notify');
+@include meta.load-css('./theme/card-accents');
+@include meta.load-css('./theme/subject-cards');
 
 /* Ionic asigna .ion-page al host del componente enlazado (p. ej. app-login) */
-/* Login: pantalla completa oscura; register sigue con lienzo claro */
+/* Auth: register conserva el lienzo oscuro legacy; login usa los tokens actuales. */
 app-login.ion-page {
-  --background: #000000;
-  background-color: #000000 !important;
+  --background: var(--ion-background-color);
+  background-color: var(--ion-background-color) !important;
   color-scheme: light;
 }
 

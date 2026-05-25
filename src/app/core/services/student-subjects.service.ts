@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { forkJoin, Observable, of } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError, switchMap, tap } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
 import { apiOrigin } from '../auth-storage';
@@ -13,6 +13,8 @@ import {
   UserApprovedSubject,
 } from '../models/user-approved-subject.model';
 import { UserCareer } from '../models/user-career.model';
+import { AuthService } from './auth.service';
+import { NetworkStatusService } from './network-status.service';
 
 export type UserApprovedSubjectMine = UserApprovedSubject & {
   subject?: Subject;
@@ -21,13 +23,22 @@ export type UserApprovedSubjectMine = UserApprovedSubject & {
 @Injectable({ providedIn: 'root' })
 export class StudentSubjectsService {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
+  private readonly network = inject(NetworkStatusService);
   private readonly apiBase = apiOrigin(environment.apiUrl);
 
   /** Materias de tus carreras creadas por ti (`GET /subjects/me`). */
   getMyPlanSubjects(): Observable<Subject[]> {
+    if (!this.network.isOnline()) {
+      return of(this.readCachedPlanSubjects());
+    }
+
     return this.http
       .get<Subject[]>(`${this.apiBase}/subjects/me`)
-      .pipe(catchError(() => of([] as Subject[])));
+      .pipe(
+        tap((subjects) => this.writeCachedPlanSubjects(subjects)),
+        catchError(() => of(this.readCachedPlanSubjects())),
+      );
   }
 
   createMySubject(body: CreateMySubjectRequest): Observable<Subject> {
@@ -107,5 +118,27 @@ export class StudentSubjectsService {
     return this.http.delete<unknown>(
       `${this.apiBase}/user-approved-subjects/me/${enrollmentId}`,
     );
+  }
+
+  private readCachedPlanSubjects(): Subject[] {
+    const raw = localStorage.getItem(this.planSubjectsCacheKey());
+    if (!raw) {
+      return [];
+    }
+
+    try {
+      return JSON.parse(raw) as Subject[];
+    } catch {
+      localStorage.removeItem(this.planSubjectsCacheKey());
+      return [];
+    }
+  }
+
+  private writeCachedPlanSubjects(subjects: Subject[]): void {
+    localStorage.setItem(this.planSubjectsCacheKey(), JSON.stringify(subjects));
+  }
+
+  private planSubjectsCacheKey(): string {
+    return `sm.offline.planSubjects.${this.auth.currentUser()?.id ?? 'guest'}`;
   }
 }

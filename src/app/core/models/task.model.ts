@@ -7,6 +7,8 @@ export interface Task {
   dueDate: string;
   /** Si el backend lo envía; si no existe, las tareas se consideran pendientes. */
   completed?: boolean;
+  /** Estado local usado cuando la tarea todavía no se sincronizó con el API. */
+  offlineStatus?: 'pending';
   createdAt?: string;
   updatedAt?: string;
 }

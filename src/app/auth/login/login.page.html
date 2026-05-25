@@ -1,14 +1,21 @@
 <ion-content [fullscreen]="true" class="login-ion-content">
-  <div class="login-container">
-    <div class="header-section">
-      <div class="logo-placeholder">
-        <!-- <img src="assets/tu-logo.png" alt="Logo" /> -->
+  <div class="login-page">
+    <section class="login-hero" aria-labelledby="login-title">
+      <div class="login-brand" aria-label="Student Manager">
+        <div class="login-brand__mark" aria-hidden="true">SM</div>
+        <span>Student Manager</span>
       </div>
-    </div>
+      <p class="login-hero__eyebrow">Panel académico</p>
+      <h1 id="login-title">Bienvenido de nuevo</h1>
+      <p class="login-hero__copy">
+        Accede a tus materias, horarios y progreso desde un solo lugar.
+      </p>
+    </section>
 
-    <div class="form-section">
+    <section class="form-section" aria-label="Inicio de sesión">
       <div class="form-section__inner">
-        <h2 class="form-section__title">Login</h2>
+        <p class="form-section__eyebrow">Iniciar sesión</p>
+        <h2 class="form-section__title">Entrá a tu cuenta</h2>
 
         @if (errorMessage(); as err) {
           <p class="login-alert" role="alert">{{ err }}</p>
@@ -16,7 +23,7 @@
 
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="input-field">
-            <label class="input-field__label" for="login-email">Email</label>
+            <label class="input-field__label" for="login-email">Correo</label>
             <div class="input-field__shell">
               <ion-input
                 id="login-email"
@@ -35,7 +42,7 @@
 
           <div class="input-field">
             <label class="input-field__label" for="login-password"
-              >Password</label
+              >Contraseña</label
             >
             <div class="input-field__shell">
               <ion-input
@@ -63,18 +70,18 @@
             @if (submitting()) {
               Ingresando…
             } @else {
-              Login
+              Iniciar sesión
             }
           </ion-button>
         </form>
 
         <div class="footer-text">
-          Don't have any account?
+          ¿No tenés cuenta?
           <a routerLink="/register">
-            <span class="footer-text__link">Sign Up</span>
+            <span class="footer-text__link">Crear cuenta</span>
           </a>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </ion-content>

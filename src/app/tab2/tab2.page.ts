@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import {
   FormBuilder,
   ReactiveFormsModule,
@@ -99,6 +99,7 @@ export class Tab2Page {
   private loadSub?: Subscription;
   private createSub?: Subscription;
   private deleteSub?: Subscription;
+  private syncSub?: Subscription;
 
   readonly loading = signal(false);
   readonly createOpen = signal(false);
@@ -107,6 +108,24 @@ export class Tab2Page {
   readonly errorMessage = signal<string | null>(null);
   readonly tasks = signal<Task[]>([]);
   readonly planSubjects = signal<Subject[]>([]);
+  readonly isOnline = this.tasksApi.isOnline;
+  readonly pendingCreateCount = this.tasksApi.pendingCreateCount;
+  readonly syncingPendingCreates = this.tasksApi.syncingPendingCreates;
+  readonly offlineBannerMessage = computed(() => {
+    const pending = this.pendingCreateCount();
+    if (!this.isOnline()) {
+      return pending > 0
+        ? `Sin conexión: mostrando datos guardados. ${pending} tarea${pending === 1 ? '' : 's'} pendiente${pending === 1 ? '' : 's'} de sincronizar.`
+        : 'Sin conexión: mostrando la última información guardada.';
+    }
+    if (this.syncingPendingCreates()) {
+      return 'Sincronizando tareas pendientes...';
+    }
+    if (pending > 0) {
+      return `${pending} tarea${pending === 1 ? '' : 's'} pendiente${pending === 1 ? '' : 's'} de sincronizar.`;
+    }
+    return null;
+  });
 
   readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.minLength(2)]],
@@ -127,11 +146,13 @@ export class Tab2Page {
       this.loadSub?.unsubscribe();
       this.createSub?.unsubscribe();
       this.deleteSub?.unsubscribe();
+      this.syncSub?.unsubscribe();
     });
   }
 
   ionViewWillEnter(): void {
     void this.prepareLocalNotifications();
+    this.syncPendingCreates();
     this.reload();
   }
 
@@ -187,6 +208,10 @@ export class Tab2Page {
 
   taskTrackKey(task: Task): string {
     return taskContentKey(task);
+  }
+
+  isPendingTask(task: Task): boolean {
+    return task.offlineStatus === 'pending' || task.id.startsWith('local-task-');
   }
 
   reload(event?: { target?: { complete?: () => void } }): void {
@@ -275,10 +300,14 @@ export class Tab2Page {
 
     this.createSub?.unsubscribe();
     this.createSubmitting.set(true);
+    let createdOffline = false;
     this.createSub = this.tasksApi
       .create(body)
       .pipe(
-        switchMap(() => this.tasksApi.list()),
+        switchMap((task) => {
+          createdOffline = this.isPendingTask(task);
+          return this.tasksApi.list();
+        }),
         finalize(() => {
           this.createSubmitting.set(false);
           this.createSub = undefined;
@@ -287,7 +316,11 @@ export class Tab2Page {
       .subscribe({
         next: (list) => {
           this.applyTaskList(list);
-          void this.notify.success('Tarea creada.');
+          void this.notify.success(
+            createdOffline
+              ? 'Tarea guardada sin conexión. Se sincronizará al volver internet.'
+              : 'Tarea creada.',
+          );
           this.closeCreateModal();
         },
         error: () => {
@@ -298,6 +331,13 @@ export class Tab2Page {
 
   async confirmDelete(task: Task): Promise<void> {
     if (this.deletingTaskId()) {
+      return;
+    }
+
+    if (!this.isOnline() && !this.isPendingTask(task)) {
+      void this.notify.warning(
+        'Sin conexión solo podés eliminar tareas creadas offline que aún no se sincronizaron.',
+      );
       return;
     }
 
@@ -319,6 +359,19 @@ export class Tab2Page {
     void this.taskNotifications.syncTasks(open, (id) => this.subjectLabel(id));
   }
 
+  private syncPendingCreates(): void {
+    if (!this.isOnline() || this.pendingCreateCount() === 0) {
+      return;
+    }
+
+    this.syncSub?.unsubscribe();
+    this.syncSub = this.tasksApi.syncPendingCreates().subscribe({
+      next: (list) => {
+        this.applyTaskList(list);
+      },
+    });
+  }
+
   private deleteTask(task: Task): void {
     if (this.deletingTaskId()) {
       return;
@@ -331,14 +384,16 @@ export class Tab2Page {
       .list()
       .pipe(
         switchMap((list) => {
-          const ids = [
-            ...new Set(
-              list
-                .filter((t) => taskContentKey(t) === key)
-                .map((t) => t.id)
-                .filter(Boolean),
-            ),
-          ];
+          const ids = this.isPendingTask(task)
+            ? [task.id]
+            : [
+                ...new Set(
+                  list
+                    .filter((t) => taskContentKey(t) === key)
+                    .map((t) => t.id)
+                    .filter(Boolean),
+                ),
+              ];
           const toDelete = ids.length > 0 ? ids : [task.id];
           return forkJoin(
             toDelete.map((id) =>
