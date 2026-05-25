@@ -8,7 +8,6 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
-  IonBackButton,
   IonButton,
   IonContent,
   IonInput,
@@ -37,7 +36,6 @@ function passwordsMatch(
     ReactiveFormsModule,
     RouterLink,
     IonContent,
-    IonBackButton,
     IonInput,
     IonButton,
   ],

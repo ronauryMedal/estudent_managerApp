@@ -45,7 +45,7 @@
 @include meta.load-css('./theme/subject-cards');
 
 /* Ionic asigna .ion-page al host del componente enlazado (p. ej. app-login) */
-/* Auth: register conserva el lienzo oscuro legacy; login usa los tokens actuales. */
+/* Auth usa el lienzo y los tokens actuales de la app. */
 app-login.ion-page {
   --background: var(--ion-background-color);
   background-color: var(--ion-background-color) !important;
@@ -53,8 +53,8 @@ app-login.ion-page {
 }
 
 app-register.ion-page {
-  --background: #000000;
-  background-color: #000000 !important;
+  --background: var(--ion-background-color);
+  background-color: var(--ion-background-color) !important;
   color-scheme: light;
 }
 

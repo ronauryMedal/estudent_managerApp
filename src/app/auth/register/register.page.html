@@ -1,30 +1,30 @@
 <ion-content [fullscreen]="true" class="signup-ion-content">
-  <div class="signup-container">
-    <div class="header-section">
-      <div class="header-pattern" aria-hidden="true"></div>
-      <div class="header-content">
-        <div class="header-start">
-          <ion-back-button
-            defaultHref="/login"
-            text=""
-            class="back-btn"
-            aria-label="Volver"
-          ></ion-back-button>
-        </div>
-        <h1>Sign Up</h1>
-        <div class="spacer" aria-hidden="true"></div>
+  <div class="signup-page">
+    <section class="signup-hero" aria-labelledby="signup-title">
+      <div class="signup-brand" aria-label="Student Manager">
+        <div class="signup-brand__mark" aria-hidden="true">SM</div>
+        <span>Student Manager</span>
       </div>
-    </div>
 
-    <div class="form-section">
+      <p class="signup-hero__eyebrow">Nueva cuenta</p>
+      <h1 id="signup-title">Organizá tu semestre desde hoy</h1>
+      <p class="signup-hero__copy">
+        Creá tu perfil, conectá tus materias y mantené tus tareas siempre a mano.
+      </p>
+    </section>
+
+    <section class="form-section" aria-label="Registro de estudiante">
       <div class="form-section__inner">
+        <p class="form-section__eyebrow">Crear cuenta</p>
+        <h2 class="form-section__title">Datos de acceso</h2>
+
         @if (errorMessage(); as err) {
           <p class="signup-alert" role="alert">{{ err }}</p>
         }
 
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="input-group">
-            <label class="input-group__label" for="reg-first">First name</label>
+            <label class="input-group__label" for="reg-first">Nombre</label>
             <div class="input-group__shell">
               <ion-input
                 id="reg-first"
@@ -32,7 +32,7 @@
                 formControlName="firstName"
                 type="text"
                 autocomplete="given-name"
-                placeholder="Vijay"
+                placeholder="Tu nombre"
               ></ion-input>
             </div>
             @if (showFirstNameError()) {
@@ -43,7 +43,7 @@
           </div>
 
           <div class="input-group">
-            <label class="input-group__label" for="reg-last">Last name</label>
+            <label class="input-group__label" for="reg-last">Apellido</label>
             <div class="input-group__shell">
               <ion-input
                 id="reg-last"
@@ -51,7 +51,7 @@
                 formControlName="lastName"
                 type="text"
                 autocomplete="family-name"
-                placeholder="Bhuva"
+                placeholder="Tu apellido"
               ></ion-input>
             </div>
             @if (showLastNameError()) {
@@ -62,7 +62,7 @@
           </div>
 
           <div class="input-group">
-            <label class="input-group__label" for="reg-email">Email</label>
+            <label class="input-group__label" for="reg-email">Correo</label>
             <div class="input-group__shell">
               <ion-input
                 id="reg-email"
@@ -71,7 +71,7 @@
                 inputmode="email"
                 type="email"
                 autocomplete="email"
-                placeholder="vijaybhuva90@gmail.com"
+                placeholder="tuemail@ejemplo.com"
               ></ion-input>
             </div>
             @if (showEmailError()) {
@@ -82,7 +82,7 @@
           </div>
 
           <div class="input-group">
-            <label class="input-group__label" for="reg-password">Password</label>
+            <label class="input-group__label" for="reg-password">Contraseña</label>
             <div class="input-group__shell">
               <ion-input
                 id="reg-password"
@@ -100,7 +100,7 @@
 
           <div class="input-group">
             <label class="input-group__label" for="reg-confirm"
-              >Confirm password</label
+              >Confirmar contraseña</label
             >
             <div class="input-group__shell">
               <ion-input
@@ -133,16 +133,16 @@
             @if (submitting()) {
               Creando cuenta…
             } @else {
-              Sign Up
+              Crear cuenta
             }
           </ion-button>
         </form>
 
         <div class="footer-text">
-          Already have any account?
-          <a routerLink="/login"><span class="footer-text__link">Sign In</span></a>
+          ¿Ya tenés cuenta?
+          <a routerLink="/login"><span class="footer-text__link">Iniciar sesión</span></a>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </ion-content>
