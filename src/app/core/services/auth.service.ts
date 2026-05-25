@@ -11,10 +11,12 @@ import {
   User,
 } from '../models';
 import { normalizeUser } from '../utils/user-photo-url';
+import { StudentTaskNotificationsService } from './student-task-notifications.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly taskNotifications = inject(StudentTaskNotificationsService);
   /** Base `…/auth` → login `POST …/auth/login`, register `POST …/auth/register` */
   private readonly authBaseUrl = `${apiOrigin(environment.apiUrl)}/auth`;
 
@@ -42,6 +44,7 @@ export class AuthService {
   }
 
   logout(): void {
+    void this.taskNotifications.clearAll();
     this._accessToken.set(null);
     this._currentUser.set(null);
     localStorage.removeItem(AUTH_TOKEN_KEY);

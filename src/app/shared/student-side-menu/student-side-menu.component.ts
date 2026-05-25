@@ -3,18 +3,13 @@ import { Router } from '@angular/router';
 import {
   IonAvatar,
   IonContent,
-  IonHeader,
   IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
   IonMenu,
-  IonTitle,
-  IonToolbar,
   MenuController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
+  chevronForwardOutline,
   clipboardOutline,
   homeOutline,
   libraryOutline,
@@ -31,18 +26,7 @@ const MENU_ID = 'student-menu';
 @Component({
   selector: 'app-student-side-menu',
   standalone: true,
-  imports: [
-    IonMenu,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonIcon,
-    IonAvatar,
-  ],
+  imports: [IonMenu, IonContent, IonIcon, IonAvatar],
   templateUrl: './student-side-menu.component.html',
   styleUrl: './student-side-menu.component.scss',
 })
@@ -56,6 +40,7 @@ export class StudentSideMenuComponent {
 
   constructor() {
     addIcons({
+      chevronForwardOutline,
       homeOutline,
       clipboardOutline,
       libraryOutline,
@@ -67,6 +52,19 @@ export class StudentSideMenuComponent {
 
   isProfileRoute(): boolean {
     return this.router.url.includes('/profile');
+  }
+
+  isHomeRoute(): boolean {
+    const url = this.router.url;
+    return url.includes('/tabs/tab1') || url === '/tabs' || url === '/';
+  }
+
+  isTasksRoute(): boolean {
+    return this.router.url.includes('/tabs/tab2');
+  }
+
+  isSubjectsRoute(): boolean {
+    return this.router.url.includes('/tabs/tab3');
   }
 
   isTeachersRoute(): boolean {

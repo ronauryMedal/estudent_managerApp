@@ -42,6 +42,7 @@ import { Subject } from '../core/models/subject.model';
 import { Task } from '../core/models/task.model';
 import { StudentNotifyService } from '../core/services/student-notify.service';
 import { StudentSubjectsService } from '../core/services/student-subjects.service';
+import { StudentTaskNotificationsService } from '../core/services/student-task-notifications.service';
 import { StudentTasksService } from '../core/services/student-tasks.service';
 import { dedupeById } from '../core/utils/dedupe-by-id';
 import { dedupeSubjects } from '../core/utils/dedupe-subjects';
@@ -92,6 +93,7 @@ export class Tab2Page {
   private readonly tasksApi = inject(StudentTasksService);
   private readonly subjectsApi = inject(StudentSubjectsService);
   private readonly notify = inject(StudentNotifyService);
+  private readonly taskNotifications = inject(StudentTaskNotificationsService);
   private readonly destroyRef = inject(DestroyRef);
 
   private loadSub?: Subscription;
@@ -129,7 +131,22 @@ export class Tab2Page {
   }
 
   ionViewWillEnter(): void {
+    void this.prepareLocalNotifications();
     this.reload();
+  }
+
+  private async prepareLocalNotifications(): Promise<void> {
+    if (!this.taskNotifications.isSupported()) {
+      return;
+    }
+    await this.taskNotifications.initialize();
+    const granted = await this.taskNotifications.requestPermissions();
+    if (!granted && !sessionStorage.getItem('task-notif-hint')) {
+      sessionStorage.setItem('task-notif-hint', '1');
+      void this.notify.info(
+        'Permití notificaciones del sistema para recordatorios de entregas.',
+      );
+    }
   }
 
   subjectLabel(subjectId: string): string {
@@ -297,7 +314,9 @@ export class Tab2Page {
   }
 
   private applyTaskList(list: Task[]): void {
-    this.tasks.set(openTasks(dedupeById(list)));
+    const open = openTasks(dedupeById(list));
+    this.tasks.set(open);
+    void this.taskNotifications.syncTasks(open, (id) => this.subjectLabel(id));
   }
 
   private deleteTask(task: Task): void {

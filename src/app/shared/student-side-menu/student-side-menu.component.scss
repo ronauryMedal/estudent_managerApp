@@ -1,142 +1,305 @@
-.side-menu-content {
-  --background: var(--ion-background-color, #fff);
+.student-menu__content {
+  --background: var(--ion-background-color);
 }
 
-.side-menu-inner {
+.student-menu__inner {
   display: flex;
   flex-direction: column;
   min-height: 100%;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) 0.85rem
+    max(1rem, env(safe-area-inset-bottom, 0px));
 }
 
-.side-menu-profile {
-  padding: 1.25rem 1rem 1rem;
-  text-align: center;
-  border-bottom: 1px solid var(--app-border);
-}
+/* ─── Perfil ─── */
 
-.side-menu-profile--link {
-  display: block;
+.student-menu__profile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
-  margin: 0;
-  border: none;
-  background: transparent;
+  margin: 0 0 1.1rem;
+  padding: 1.35rem 1rem 1.15rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-xl);
+  background: var(--app-hero-gradient);
+  box-shadow: var(--app-shadow-sm);
+  text-align: center;
   cursor: pointer;
   font: inherit;
   color: inherit;
-  text-align: center;
+  overflow: hidden;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+
+  &:active {
+    transform: scale(0.985);
+  }
 }
 
-.side-menu-profile__edit {
-  display: inline-block;
-  margin-top: 0.65rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--ion-color-primary, #3880ff);
+.student-menu__profile-glow {
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 70%;
+  height: 80%;
+  background: radial-gradient(
+    circle,
+    rgba(var(--ion-color-primary-rgb), 0.22) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
 }
 
-.side-menu-profile--empty {
+.student-menu__profile--empty {
+  cursor: default;
   padding: 2rem 1rem;
 }
 
-.side-menu-profile__avatar {
-  width: 88px;
-  height: 88px;
-  margin: 0 auto 0.75rem;
-  border: 2px solid var(--app-border);
+.student-menu__avatar {
+  position: relative;
+  z-index: 1;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 0.75rem;
+  border: 3px solid var(--app-surface);
+  box-shadow:
+    0 4px 16px rgba(15, 23, 42, 0.12),
+    0 0 0 1px var(--app-border);
 }
 
-.side-menu-profile__avatar img {
+.student-menu__avatar img {
   object-fit: cover;
 }
 
-.side-menu-profile__initials {
+.student-menu__initials {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: var(--ion-color-dark, #222428);
-  background: var(--app-surface-elevated);
+  color: var(--ion-color-primary);
+  background: var(--app-accent-soft);
 }
 
-.side-menu-profile__placeholder-icon {
-  font-size: 4rem;
+.student-menu__placeholder-icon {
+  font-size: 3.5rem;
   color: var(--app-text-muted);
   margin-bottom: 0.5rem;
 }
 
-.side-menu-profile__name {
+.student-menu__name {
+  position: relative;
+  z-index: 1;
   margin: 0;
   font-size: 1.125rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
   line-height: 1.25;
   color: var(--ion-text-color);
 }
 
-.side-menu-profile__email {
-  margin: 0.35rem 0 0;
-  font-size: 0.875rem;
+.student-menu__email {
+  position: relative;
+  z-index: 1;
+  margin: 0.3rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
   color: var(--app-text-secondary);
   word-break: break-word;
 }
 
-.side-menu-profile__role {
-  margin: 0.5rem 0 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+.student-menu__role {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--ion-color-primary);
+  background: var(--app-accent-soft);
+  border-radius: 999px;
+}
+
+.student-menu__profile-cta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--ion-color-primary);
+
+  ion-icon {
+    font-size: 1rem;
+    opacity: 0.85;
+  }
+}
+
+/* ─── Navegación ─── */
+
+.student-menu__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.student-menu__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-md);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ion-text-color);
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.12s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.student-menu__link--stacked {
+  align-items: flex-start;
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+
+  .student-menu__link-icon {
+    margin-top: 0.1rem;
+  }
+}
+
+.student-menu__link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 11px;
+  background: var(--app-surface-elevated);
+  color: var(--app-icon);
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+
+  ion-icon {
+    font-size: 1.2rem;
+  }
+}
+
+.student-menu__link-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.student-menu__link-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.student-menu__link-hint {
+  font-size: 0.75rem;
+  font-weight: 450;
+  line-height: 1.35;
   color: var(--app-text-muted);
 }
 
-.side-menu-list {
-  padding-top: 0.5rem;
-  background: transparent;
+.student-menu__link--active {
+  background: var(--app-accent-soft);
+  border-color: rgba(var(--ion-color-primary-rgb), 0.2);
+  box-shadow: inset 3px 0 0 0 var(--ion-color-primary);
+
+  .student-menu__link-icon {
+    background: var(--ion-color-primary);
+    color: var(--ion-color-primary-contrast);
+  }
+
+  .student-menu__link-label {
+    color: var(--ion-color-primary);
+    font-weight: 650;
+  }
 }
 
-.side-menu-list ion-item {
-  --padding-start: 1rem;
-  --min-height: 48px;
-  font-weight: 500;
-  cursor: pointer;
+@media (hover: hover) {
+  .student-menu__link:not(.student-menu__link--active):hover {
+    background: var(--app-surface-elevated);
+    border-color: var(--app-border);
+  }
+
+  .student-menu__profile:hover {
+    box-shadow: var(--app-shadow-md);
+  }
 }
 
-.side-menu-item--active {
-  --background: rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.12);
-}
+/* ─── Cerrar sesión ─── */
 
-.side-menu-item__title {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.side-menu-item__hint {
-  margin: 0.15rem 0 0;
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--app-text-secondary);
-}
-
-.side-menu-list ion-icon {
-  color: var(--ion-color-dark, #222428);
-  margin-inline-end: 0.25rem;
-}
-
-.side-menu-footer {
+.student-menu__footer {
   margin-top: auto;
   padding-top: 1rem;
-  border-top: 1px solid var(--app-border);
 }
 
-.side-menu-footer ion-list {
-  background: transparent;
+.student-menu__logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-height: 46px;
+  padding: 0.65rem 1rem;
+  border: 1px solid rgba(var(--ion-color-danger-rgb, 239, 68, 68), 0.35);
+  border-radius: var(--app-radius-md);
+  background: rgba(var(--ion-color-danger-rgb, 239, 68, 68), 0.08);
+  font-size: 0.9375rem;
+  font-weight: 650;
+  color: var(--ion-color-danger, #eb445a);
+  cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.18s ease,
+    transform 0.12s ease;
+
+  ion-icon {
+    font-size: 1.2rem;
+  }
+
+  &:active {
+    transform: scale(0.98);
+    background: rgba(var(--ion-color-danger-rgb, 239, 68, 68), 0.14);
+  }
 }
 
-.side-menu-footer ion-item {
-  --padding-start: 1rem;
-  --min-height: 48px;
+@media (hover: hover) {
+  .student-menu__logout:hover {
+    background: rgba(var(--ion-color-danger-rgb, 239, 68, 68), 0.12);
+  }
 }
