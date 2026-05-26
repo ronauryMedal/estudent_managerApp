@@ -2,11 +2,6 @@
   <ion-toolbar>
     <app-student-menu-buttons />
     <ion-title>Tareas</ion-title>
-    <ion-buttons slot="end">
-      <ion-button fill="clear" aria-label="Nueva tarea" (click)="openCreateModal()">
-        <ion-icon slot="icon-only" name="add"></ion-icon>
-      </ion-button>
-    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -14,11 +9,6 @@
   <ion-header collapse="condense">
     <ion-toolbar>
       <ion-title size="large">Tareas</ion-title>
-      <ion-buttons slot="end">
-        <ion-button fill="clear" aria-label="Nueva tarea" (click)="openCreateModal()">
-          <ion-icon slot="icon-only" name="add"></ion-icon>
-        </ion-button>
-      </ion-buttons>
     </ion-toolbar>
   </ion-header>
 
@@ -42,6 +32,33 @@
       </div>
     }
 
+    @if (tasks().length > 0) {
+      <div class="tasks-filter" role="tablist" aria-label="Filtrar tareas">
+        <button
+          type="button"
+          class="tasks-filter__option"
+          [class.tasks-filter__option--active]="taskFilter() === 'pending'"
+          role="tab"
+          [attr.aria-selected]="taskFilter() === 'pending'"
+          (click)="setTaskFilter('pending')"
+        >
+          <span>Por hacer</span>
+          <strong>{{ pendingTasks().length }}</strong>
+        </button>
+        <button
+          type="button"
+          class="tasks-filter__option"
+          [class.tasks-filter__option--active]="taskFilter() === 'completed'"
+          role="tab"
+          [attr.aria-selected]="taskFilter() === 'completed'"
+          (click)="setTaskFilter('completed')"
+        >
+          <span>Realizadas</span>
+          <strong>{{ completedTasks().length }}</strong>
+        </button>
+      </div>
+    }
+
     @if (loading() && tasks().length === 0) {
       <div class="tasks-state">
         <ion-spinner name="crescent" color="dark"></ion-spinner>
@@ -58,21 +75,19 @@
       </div>
     }
 
-    @else if (tasks().length === 0) {
+    @else if (visibleTasks().length === 0) {
       <div class="tasks-empty">
         <ion-icon name="clipboard-outline" aria-hidden="true"></ion-icon>
-        <p>
-          No tenés tareas pendientes. Pulsa <strong>+</strong> para crear una
-          (necesitás materias en tu plan).
-        </p>
+        <p>{{ emptyMessage() }}</p>
       </div>
     } @else {
       <div class="tasks-cards" role="list">
-        @for (task of tasks(); track taskTrackKey(task); let i = $index) {
+        @for (task of visibleTasks(); track taskTrackKey(task); let i = $index) {
           <article
             class="tasks-card app-card-interactive"
             [ngClass]="subjectAccentClass(task.subjectId)"
-            [class.tasks-card--urgent]="isDueUrgent(task.dueDate)"
+            [class.tasks-card--urgent]="!isCompleted(task) && isDueUrgent(task.dueDate)"
+            [class.tasks-card--completed]="isCompleted(task)"
             role="listitem"
             appAnimateIn
             animation="fadeInUp"
@@ -91,12 +106,18 @@
                     Pendiente
                   </span>
                 }
-                <span
-                  class="tasks-card__badge"
-                  [attr.data-tone]="dueTone(task.dueDate)"
-                >
-                  {{ dueRelativeLabel(task.dueDate) }}
-                </span>
+                @if (isCompleted(task)) {
+                  <span class="tasks-card__badge" data-tone="completed">
+                    Completada
+                  </span>
+                } @else {
+                  <span
+                    class="tasks-card__badge"
+                    [attr.data-tone]="dueTone(task.dueDate)"
+                  >
+                    {{ dueRelativeLabel(task.dueDate) }}
+                  </span>
+                }
               </header>
 
               <h2 class="tasks-card__title">{{ task.title }}</h2>
@@ -108,6 +129,25 @@
 
               @if (task.description?.trim()) {
                 <p class="tasks-card__desc">{{ task.description }}</p>
+              }
+
+              @if (!isCompleted(task)) {
+                <div class="tasks-card__actions">
+                  <button
+                    type="button"
+                    class="tasks-card__done"
+                    [disabled]="completingTaskId() === task.id || deletingTaskId() === task.id"
+                    [attr.aria-label]="'Marcar realizada ' + task.title"
+                    (click)="completeTask(task)"
+                  >
+                    @if (completingTaskId() === task.id) {
+                      <ion-spinner name="crescent" color="success"></ion-spinner>
+                    } @else {
+                      <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
+                      Realizada
+                    }
+                  </button>
+                </div>
               }
             </div>
 
@@ -185,6 +225,23 @@
                 <ion-select-option [value]="s.id">{{ s.name }}</ion-select-option>
               }
             </ion-select>
+          </ion-item>
+          <ion-item class="tasks-ai-option" lines="none">
+            <ion-icon
+              slot="start"
+              name="sparkles-outline"
+              aria-hidden="true"
+            ></ion-icon>
+            <ion-toggle
+              formControlName="generateAiResearch"
+              labelPlacement="start"
+              justify="space-between"
+            >
+              <div class="tasks-ai-option__text">
+                <strong>Investigación con IA</strong>
+                <small>Genera un PDF y lo envía a tu correo.</small>
+              </div>
+            </ion-toggle>
           </ion-item>
         </ion-list>
         <ion-button

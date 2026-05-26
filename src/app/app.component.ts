@@ -5,8 +5,6 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from './core/services/auth.service';
 import { StudentTaskNotificationsService } from './core/services/student-task-notifications.service';
 import { StudentTasksService } from './core/services/student-tasks.service';
-import { dedupeById } from './core/utils/dedupe-by-id';
-import { openTasks } from './core/utils/dedupe-tasks';
 import { StudentSideMenuComponent } from './shared/student-side-menu/student-side-menu.component';
 
 @Component({
@@ -32,7 +30,7 @@ export class AppComponent implements OnInit {
     await this.taskNotifications.initialize();
     try {
       const list = await firstValueFrom(this.tasksApi.list());
-      await this.taskNotifications.syncTasks(openTasks(dedupeById(list)));
+      await this.taskNotifications.syncTasks(list);
     } catch {
       /* Sin conexión al abrir */
     }

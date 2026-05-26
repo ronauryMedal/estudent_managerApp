@@ -2,15 +2,6 @@
   <ion-toolbar>
     <app-student-menu-buttons />
     <ion-title>Materias</ion-title>
-    <ion-buttons slot="end">
-      <ion-button
-        fill="clear"
-        aria-label="Nueva materia"
-        (click)="openCreateModal()"
-      >
-        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -18,15 +9,6 @@
   <ion-header collapse="condense">
     <ion-toolbar>
       <ion-title size="large">Materias</ion-title>
-      <ion-buttons slot="end">
-        <ion-button
-          fill="clear"
-          aria-label="Nueva materia"
-          (click)="openCreateModal()"
-        >
-          <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
-        </ion-button>
-      </ion-buttons>
     </ion-toolbar>
   </ion-header>
 
@@ -331,10 +313,11 @@
             </ion-item>
             <ion-item>
               <ion-input
-                label="Código de curso (opcional)"
+                label="Código de curso"
                 labelPlacement="stacked"
                 type="text"
                 formControlName="courseNumber"
+                placeholder="Ej. IHC-1002"
               ></ion-input>
             </ion-item>
           }

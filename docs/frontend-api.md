@@ -550,6 +550,7 @@ Body:
 - `GET /tasks` (JWT) — solo las del usuario del token
 - `GET /tasks/:id` (JWT)
 - `POST /tasks` (JWT)
+- `POST /tasks/:id/ai-research` (JWT) — generar investigación IA para una tarea existente
 - `PATCH /tasks/:id` (JWT)
 - `DELETE /tasks/:id` (JWT)
 
@@ -560,11 +561,97 @@ Body:
   "title": "Practica de funciones",
   "description": "Capitulo 1",
   "dueDate": "2026-05-20T23:59:00.000Z",
-  "subjectId": "subject_uuid"
+  "subjectId": "subject_uuid",
+  "generateAiResearch": true
 }
 ```
 
 `userId` no se envía; viene del JWT.
+
+### Cambiar estado de una tarea
+
+Para marcar una tarea como completada o pendiente desde el front, usa `PATCH /tasks/:id`:
+
+```json
+{
+  "isCompleted": true
+}
+```
+
+Para volverla pendiente:
+
+```json
+{
+  "isCompleted": false
+}
+```
+
+El backend solo actualiza tareas del usuario autenticado.
+
+`generateAiResearch` es opcional. Si viene `true`, el backend:
+
+1. Crea la tarea.
+2. Genera una investigación con Gemini usando `title`, `description` y la materia.
+3. Convierte el contenido a PDF.
+4. Envía el PDF al correo del estudiante.
+5. Guarda el estado en `task.aiResearch`.
+
+Respuesta esperada al inicio:
+
+```json
+{
+  "id": "task_uuid",
+  "title": "Practica de funciones",
+  "aiResearch": {
+    "status": "PENDING",
+    "pdfUrl": null,
+    "error": null
+  }
+}
+```
+
+Estados posibles:
+
+| Estado | Significado |
+|--------|-------------|
+| `PENDING` | Solicitud creada, esperando procesamiento |
+| `PROCESSING` | Gemini/PDF/correo en ejecución |
+| `COMPLETED` | PDF generado; si el correo estaba activo, enviado |
+| `FAILED` | Falló Gemini, PDF o configuración; revisar `error` |
+
+También puedes generar la investigación después:
+
+```http
+POST /tasks/:id/ai-research
+Authorization: Bearer <token>
+```
+
+El PDF queda disponible en `aiResearch.pdfUrl`, por ejemplo:
+
+`http://localhost:3000/uploads/ai-research/task_uuid.pdf`
+
+Variables necesarias en `.env`:
+
+```env
+GEMINI_API_KEY=tu-api-key-de-google-ai-studio
+GEMINI_MODEL=gemini-1.5-flash
+```
+
+### Recordatorios automáticos
+
+Al crear una tarea, el servidor programa recordatorios **sin llamadas extra del front**:
+
+| Momento | Acción |
+|---------|--------|
+| ~24 h antes de `dueDate` | Notificación in-app + correo (si SMTP activo) |
+| ~4 h antes de `dueDate` | Idem |
+
+- Revisión cada **5 minutos** en el backend.
+- Si editas `dueDate` (`PATCH /tasks/:id`), se reprograman los recordatorios.
+- Tareas ya `isCompleted: true` no reciben recordatorios.
+- Si la entrega es en menos de 24 h, puede no enviarse el de “1 día”; si es en menos de 4 h, tampoco el de “4 horas”.
+
+Configuración de correo: ver [`docs/email-setup.md`](./email-setup.md) (Brevo, Resend, SendGrid).
 
 ---
 

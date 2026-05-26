@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
 
 import { Task } from '../models/task.model';
 import { dedupeById } from '../utils/dedupe-by-id';
-import { openTasks } from '../utils/dedupe-tasks';
+import { openTasks, taskIsCompleted } from '../utils/dedupe-tasks';
 
 const CHANNEL_ID = 'task-reminders';
 const DAY_BEFORE_MS = 86_400_000;
@@ -70,14 +70,14 @@ export class StudentTaskNotificationsService {
       return;
     }
 
-    await this.cancelManaged();
+    await this.cancelKnownTaskNotifications(tasks);
 
     const toSchedule: LocalNotificationSchema[] = [];
     const open = openTasks(dedupeById(tasks));
     const now = Date.now();
 
     for (const task of open) {
-      if (task.completed) {
+      if (taskIsCompleted(task)) {
         continue;
       }
       const dueMs = new Date(task.dueDate).getTime();
@@ -186,6 +186,35 @@ export class StudentTaskNotificationsService {
     await LocalNotifications.cancel({
       notifications: [...this.managedIds].map((id) => ({ id })),
     });
+    this.managedIds.clear();
+  }
+
+  private async cancelKnownTaskNotifications(tasks: Task[]): Promise<void> {
+    const ids = new Set<number>(this.managedIds);
+    for (const task of tasks) {
+      ids.add(taskNotificationId(task.id, 'day-before'));
+      ids.add(taskNotificationId(task.id, 'due'));
+    }
+
+    if (ids.size === 0) {
+      return;
+    }
+
+    try {
+      const pending = await LocalNotifications.getPending();
+      const pendingIds = new Set(pending.notifications.map((n) => n.id));
+      const toCancel = [...ids].filter((id) => pendingIds.has(id));
+      if (toCancel.length > 0) {
+        await LocalNotifications.cancel({
+          notifications: toCancel.map((id) => ({ id })),
+        });
+      }
+    } catch {
+      await LocalNotifications.cancel({
+        notifications: [...ids].map((id) => ({ id })),
+      });
+    }
+
     this.managedIds.clear();
   }
 

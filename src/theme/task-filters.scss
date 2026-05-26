@@ -1,0 +1,62 @@
+/* Filtro moderno de tareas (pendientes / realizadas). */
+
+.tasks-filter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  padding: 0.3rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+  background: var(--app-surface-elevated);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.tasks-filter__option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.55rem;
+  border: 0;
+  border-radius: var(--app-radius-md);
+  background: transparent;
+  color: var(--app-text-secondary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.12s ease;
+}
+
+.tasks-filter__option strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--app-chip-bg);
+  color: var(--app-chip-text);
+  font-size: 0.75rem;
+}
+
+.tasks-filter__option:active {
+  transform: scale(0.98);
+}
+
+.tasks-filter__option--active {
+  background: var(--app-surface);
+  color: var(--ion-color-primary);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.tasks-filter__option--active strong {
+  background: var(--app-accent-soft);
+  color: var(--ion-color-primary);
+}

@@ -658,8 +658,7 @@ export class Tab3Page {
     if (v.modality === 'IN_PERSON' || v.modality === 'HYBRID') {
       body.building = v.building.trim();
       body.section = v.section.trim();
-      const course = v.courseNumber.trim();
-      body.courseNumber = course.length > 0 ? course : null;
+      body.courseNumber = v.courseNumber.trim();
     }
 
     const teacherId = v.teacherId?.trim() || '';
@@ -703,9 +702,10 @@ export class Tab3Page {
           this.closeCreateModal();
           this.reload();
         },
-        error: () => {
-          void this.notify.error(
-            'No se pudo crear la materia. El careerId debe ser una carrera que vos creaste.',
+        error: (err: HttpErrorResponse) => {
+          void this.notify.errorFromHttp(
+            err,
+            'No se pudo crear la materia. Revisá que la carrera sea tuya y que los campos obligatorios estén completos.',
           );
         },
       });
@@ -882,7 +882,7 @@ export class Tab3Page {
     const modality = this.createForm.get('modality')!
       .value as SubjectModality;
     const need = modality === 'IN_PERSON' || modality === 'HYBRID';
-    for (const key of ['building', 'section'] as const) {
+    for (const key of ['building', 'section', 'courseNumber'] as const) {
       const c = this.createForm.get(key)!;
       if (need) {
         c.setValidators([Validators.required, Validators.minLength(1)]);
@@ -891,8 +891,5 @@ export class Tab3Page {
       }
       c.updateValueAndValidity({ emitEvent: false });
     }
-    const course = this.createForm.get('courseNumber')!;
-    course.clearValidators();
-    course.updateValueAndValidity({ emitEvent: false });
   }
 }

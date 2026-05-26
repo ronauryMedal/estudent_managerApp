@@ -77,7 +77,9 @@ export class StudentTasksService {
   }
 
   update(id: string, body: UpdateTaskRequest): Observable<Task> {
-    return this.http.patch<Task>(`${this.apiBase}/tasks/${id}`, body);
+    return this.http
+      .patch<Task>(`${this.apiBase}/tasks/${id}`, body)
+      .pipe(tap((task) => this.offlineStore.upsertCachedTask(task)));
   }
 
   delete(id: string): Observable<unknown> {

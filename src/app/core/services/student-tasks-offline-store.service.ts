@@ -112,6 +112,7 @@ export class StudentTasksOfflineStoreService {
       title: pending.body.title,
       description: pending.body.description,
       dueDate: pending.body.dueDate,
+      isCompleted: false,
       completed: false,
       createdAt: pending.createdAt,
       updatedAt: pending.createdAt,

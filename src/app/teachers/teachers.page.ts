@@ -11,7 +11,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import {
   IonButton,
-  IonButtons,
   IonContent,
   IonFab,
   IonFabButton,
@@ -56,7 +55,6 @@ import { StudentNavBackComponent } from '../shared/student-nav-back.component';
     IonHeader,
     IonToolbar,
     IonTitle,
-    IonButtons,
     IonButton,
     IonContent,
     IonList,

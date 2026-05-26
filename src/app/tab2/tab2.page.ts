@@ -7,7 +7,6 @@ import {
 } from '@angular/forms';
 import {
   IonButton,
-  IonButtons,
   IonContent,
   IonFab,
   IonFabButton,
@@ -25,6 +24,7 @@ import {
   IonSpinner,
   IonTextarea,
   IonTitle,
+  IonToggle,
   IonToolbar,
 } from '@ionic/angular/standalone';
 import { forkJoin, Subscription, of } from 'rxjs';
@@ -34,7 +34,9 @@ import {
   add,
   bookOutline,
   calendarOutline,
+  checkmarkDoneOutline,
   clipboardOutline,
+  sparklesOutline,
   trashOutline,
 } from 'ionicons/icons';
 
@@ -46,7 +48,13 @@ import { StudentTaskNotificationsService } from '../core/services/student-task-n
 import { StudentTasksService } from '../core/services/student-tasks.service';
 import { dedupeById } from '../core/utils/dedupe-by-id';
 import { dedupeSubjects } from '../core/utils/dedupe-subjects';
-import { openTasks, taskContentKey } from '../core/utils/dedupe-tasks';
+import {
+  dedupeTasks,
+  openTasks,
+  sortTasksByDue,
+  taskContentKey,
+  taskIsCompleted,
+} from '../core/utils/dedupe-tasks';
 import {
   taskDueRelativeLabel,
   taskDueTone,
@@ -56,6 +64,8 @@ import {
 import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
 import { StudentNavBackComponent } from '../shared/student-nav-back.component';
 import { AnimateInDirective } from '../shared/animate-in.directive';
+
+type TaskFilter = 'pending' | 'completed';
 
 @Component({
   selector: 'app-tab2',
@@ -70,8 +80,7 @@ import { AnimateInDirective } from '../shared/animate-in.directive';
     IonHeader,
     IonToolbar,
     IonTitle,
-    IonButtons,
-      IonButton,
+    IonButton,
     IonContent,
     IonList,
     IonItem,
@@ -81,6 +90,7 @@ import { AnimateInDirective } from '../shared/animate-in.directive';
     IonSelect,
     IonSelectOption,
     IonSpinner,
+    IonToggle,
     IonRefresher,
     IonRefresherContent,
     IonFab,
@@ -105,9 +115,25 @@ export class Tab2Page {
   readonly createOpen = signal(false);
   readonly createSubmitting = signal(false);
   readonly deletingTaskId = signal<string | null>(null);
+  readonly completingTaskId = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly tasks = signal<Task[]>([]);
+  readonly taskFilter = signal<TaskFilter>('pending');
   readonly planSubjects = signal<Subject[]>([]);
+  readonly pendingTasks = computed(() => openTasks(this.tasks()));
+  readonly completedTasks = computed(() =>
+    sortTasksByDue(dedupeTasks(this.tasks()).filter((task) => taskIsCompleted(task))),
+  );
+  readonly visibleTasks = computed(() =>
+    this.taskFilter() === 'completed'
+      ? this.completedTasks()
+      : this.pendingTasks(),
+  );
+  readonly emptyMessage = computed(() =>
+    this.taskFilter() === 'completed'
+      ? 'Todavía no marcaste tareas como realizadas.'
+      : 'No tenés tareas pendientes. Pulsa + para crear una.',
+  );
   readonly isOnline = this.tasksApi.isOnline;
   readonly pendingCreateCount = this.tasksApi.pendingCreateCount;
   readonly syncingPendingCreates = this.tasksApi.syncingPendingCreates;
@@ -132,6 +158,7 @@ export class Tab2Page {
     description: [''],
     dueDate: ['', Validators.required],
     subjectId: ['', Validators.required],
+    generateAiResearch: [false],
   });
 
   constructor() {
@@ -140,6 +167,8 @@ export class Tab2Page {
       bookOutline,
       clipboardOutline,
       calendarOutline,
+      checkmarkDoneOutline,
+      sparklesOutline,
       trashOutline,
     });
     this.destroyRef.onDestroy(() => {
@@ -210,6 +239,14 @@ export class Tab2Page {
     return taskContentKey(task);
   }
 
+  isCompleted(task: Task): boolean {
+    return taskIsCompleted(task);
+  }
+
+  setTaskFilter(filter: TaskFilter): void {
+    this.taskFilter.set(filter);
+  }
+
   isPendingTask(task: Task): boolean {
     return task.offlineStatus === 'pending' || task.id.startsWith('local-task-');
   }
@@ -267,6 +304,7 @@ export class Tab2Page {
       description: '',
       dueDate: localDue,
       subjectId: this.planSubjects()[0]!.id,
+      generateAiResearch: false,
     });
     this.createOpen.set(true);
   }
@@ -296,6 +334,7 @@ export class Tab2Page {
       description: v.description.trim() || undefined,
       dueDate: due.toISOString(),
       subjectId: v.subjectId,
+      generateAiResearch: v.generateAiResearch,
     };
 
     this.createSub?.unsubscribe();
@@ -319,7 +358,9 @@ export class Tab2Page {
           void this.notify.success(
             createdOffline
               ? 'Tarea guardada sin conexión. Se sincronizará al volver internet.'
-              : 'Tarea creada.',
+              : v.generateAiResearch
+                ? 'Tarea creada. La IA generará el PDF y lo enviará a tu correo.'
+                : 'Tarea creada.',
           );
           this.closeCreateModal();
         },
@@ -353,10 +394,65 @@ export class Tab2Page {
     }
   }
 
+  completeTask(task: Task): void {
+    if (this.completingTaskId() || this.deletingTaskId()) {
+      return;
+    }
+
+    if (this.isPendingTask(task)) {
+      this.deleteTask(task, 'completed');
+      return;
+    }
+
+    if (!this.isOnline()) {
+      void this.notify.warning(
+        'Necesitás conexión para marcar esta tarea como realizada.',
+      );
+      return;
+    }
+
+    const key = taskContentKey(task);
+    this.completingTaskId.set(task.id);
+    this.tasksApi
+      .list()
+      .pipe(
+        switchMap((list) => {
+          const ids = [
+            ...new Set(
+              list
+                .filter((t) => taskContentKey(t) === key)
+                .map((t) => t.id)
+                .filter(Boolean),
+            ),
+          ];
+          const toComplete = ids.length > 0 ? ids : [task.id];
+          return forkJoin(
+            toComplete.map((id) =>
+              this.tasksApi
+                .update(id, { isCompleted: true })
+                .pipe(catchError(() => of(null))),
+            ),
+          );
+        }),
+        switchMap(() => this.tasksApi.list()),
+        finalize(() => this.completingTaskId.set(null)),
+      )
+      .subscribe({
+        next: (list) => {
+          this.applyTaskList(list);
+          void this.notify.success(
+            'Tarea marcada como realizada. Ya no recibirás recordatorios.',
+          );
+        },
+        error: () => {
+          void this.notify.error('No se pudo actualizar la tarea.');
+        },
+      });
+  }
+
   private applyTaskList(list: Task[]): void {
-    const open = openTasks(dedupeById(list));
-    this.tasks.set(open);
-    void this.taskNotifications.syncTasks(open, (id) => this.subjectLabel(id));
+    this.tasks.set(sortTasksByDue(dedupeTasks(dedupeById(list))));
+    void this.taskNotifications.syncTasks(list, (id) => this.subjectLabel(id));
   }
 
   private syncPendingCreates(): void {
@@ -372,7 +468,7 @@ export class Tab2Page {
     });
   }
 
-  private deleteTask(task: Task): void {
+  private deleteTask(task: Task, reason: 'delete' | 'completed' = 'delete'): void {
     if (this.deletingTaskId()) {
       return;
     }
@@ -407,7 +503,11 @@ export class Tab2Page {
       .subscribe({
         next: (list) => {
           this.applyTaskList(list);
-          void this.notify.success('Tarea eliminada.');
+          void this.notify.success(
+            reason === 'completed'
+              ? 'Tarea marcada como realizada.'
+              : 'Tarea eliminada.',
+          );
         },
         error: () => {
           void this.notify.error('No se pudo eliminar la tarea.');

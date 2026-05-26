@@ -31,8 +31,10 @@ export function sortTasksByDue(list: readonly Task[]): Task[] {
   );
 }
 
+export function taskIsCompleted(task: Task): boolean {
+  return task.isCompleted === true || task.completed === true;
+}
+
 export function openTasks(list: readonly Task[]): Task[] {
-  return sortTasksByDue(
-    dedupeTasks(list).filter((t) => t.completed !== true),
-  );
+  return sortTasksByDue(dedupeTasks(list).filter((t) => !taskIsCompleted(t)));
 }

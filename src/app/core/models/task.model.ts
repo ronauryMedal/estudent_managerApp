@@ -5,8 +5,15 @@ export interface Task {
   title: string;
   description?: string;
   dueDate: string;
-  /** Si el backend lo envía; si no existe, las tareas se consideran pendientes. */
+  /** Campo actual del backend. Si no existe, la tarea se considera pendiente. */
+  isCompleted?: boolean;
+  /** Alias histórico local. */
   completed?: boolean;
+  aiResearch?: {
+    status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    pdfUrl?: string | null;
+    error?: string | null;
+  } | null;
   /** Estado local usado cuando la tarea todavía no se sincronizó con el API. */
   offlineStatus?: 'pending';
   createdAt?: string;
@@ -18,6 +25,9 @@ export interface CreateTaskRequest {
   description?: string;
   dueDate: string;
   subjectId: string;
+  generateAiResearch?: boolean;
 }
 
-export type UpdateTaskRequest = Partial<CreateTaskRequest>;
+export type UpdateTaskRequest = Partial<CreateTaskRequest> & {
+  isCompleted?: boolean;
+};

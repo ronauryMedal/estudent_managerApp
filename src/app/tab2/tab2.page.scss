@@ -115,6 +115,17 @@
     0 4px 20px rgba(var(--ion-color-warning-rgb, 245, 158, 11), 0.12);
 }
 
+.tasks-card--completed {
+  opacity: 0.88;
+
+  .tasks-card__title {
+    color: var(--app-text-secondary);
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: rgba(var(--ion-color-success-rgb, 16, 185, 129), 0.5);
+  }
+}
+
 .tasks-card__accent {
   position: absolute;
   left: 0;
@@ -207,6 +218,11 @@
   color: var(--ion-color-success-shade, #28ba62);
 }
 
+.tasks-card__badge[data-tone='completed'] {
+  background: rgba(var(--ion-color-success-rgb, 16, 185, 129), 0.16);
+  color: var(--ion-color-success-shade, #28ba62);
+}
+
 .tasks-card__title {
   margin: 0 0 0.4rem;
   font-size: 1.0625rem;
@@ -241,6 +257,52 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.tasks-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.tasks-card__done {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(var(--ion-color-success-rgb, 16, 185, 129), 0.28);
+  border-radius: 999px;
+  background: rgba(var(--ion-color-success-rgb, 16, 185, 129), 0.12);
+  color: var(--ion-color-success-shade, #28ba62);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    background 0.18s ease;
+
+  ion-icon {
+    font-size: 1rem;
+  }
+
+  ion-spinner {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  &:not(:disabled):active {
+    transform: scale(0.96);
+    background: rgba(var(--ion-color-success-rgb, 16, 185, 129), 0.18);
+  }
 }
 
 .tasks-card__delete {
@@ -280,6 +342,53 @@
     transform: scale(0.92);
     background: rgba(var(--ion-color-danger-rgb, 239, 68, 68), 0.12);
     color: var(--ion-color-danger, #eb445a);
+  }
+}
+
+.tasks-ai-option {
+  --background: linear-gradient(
+    135deg,
+    var(--app-accent-soft) 0%,
+    var(--app-surface) 70%
+  );
+  --border-radius: var(--app-radius-md);
+  --padding-start: 0.85rem;
+  --inner-padding-end: 0.85rem;
+  margin-top: 0.75rem;
+  border: 1px solid rgba(var(--ion-color-primary-rgb), 0.16);
+  border-radius: var(--app-radius-md);
+  box-shadow: var(--app-shadow-sm);
+
+  ion-icon {
+    color: var(--ion-color-primary);
+    font-size: 1.25rem;
+  }
+
+  ion-toggle {
+    width: 100%;
+    --track-background: var(--app-surface-elevated);
+    --track-background-checked: var(--ion-color-primary);
+    --handle-background: var(--app-surface);
+    --handle-background-checked: var(--ion-color-primary-contrast);
+  }
+}
+
+.tasks-ai-option__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0;
+
+  strong {
+    font-size: 0.9375rem;
+    color: var(--ion-text-color);
+  }
+
+  small {
+    max-width: 13rem;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--app-text-secondary);
   }
 }
 
