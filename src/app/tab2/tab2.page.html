@@ -106,6 +106,15 @@
                     Pendiente
                   </span>
                 }
+                @if (aiResearchStatusLabel(task); as aiLabel) {
+                  <span
+                    class="tasks-card__ai-badge"
+                    [attr.data-tone]="aiResearchStatusTone(task)"
+                  >
+                    <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
+                    {{ aiLabel }}
+                  </span>
+                }
                 @if (isCompleted(task)) {
                   <span class="tasks-card__badge" data-tone="completed">
                     Completada
@@ -236,13 +245,255 @@
               formControlName="generateAiResearch"
               labelPlacement="start"
               justify="space-between"
+              (ionChange)="onAiResearchToggle($any($event).detail.checked)"
             >
               <div class="tasks-ai-option__text">
                 <strong>Investigación con IA</strong>
-                <small>Genera un PDF y lo envía a tu correo.</small>
+                <small>Genera un PDF académico y lo envía a tu correo.</small>
               </div>
             </ion-toggle>
           </ion-item>
+
+          @if (form.controls.generateAiResearch.value) {
+            <section
+              class="tasks-ai-panel"
+              aria-label="Opciones de investigación con IA"
+            >
+              <header class="tasks-ai-panel__intro">
+                <ion-icon name="options-outline" aria-hidden="true"></ion-icon>
+                <div>
+                  <h3>Configuración de la investigación</h3>
+                  <p>
+                    Subí PDFs opcionales, elegí modo avanzado o agregá
+                    observaciones para Gemini.
+                  </p>
+                </div>
+              </header>
+
+              <div class="tasks-ai-panel__card tasks-ai-panel__card--pdfs">
+                <div class="tasks-ai-panel__section-title">
+                  <ion-icon name="library-outline" aria-hidden="true"></ion-icon>
+                  <span>Material en PDF (opcional)</span>
+                </div>
+                <p class="tasks-ai-panel__hint tasks-ai-panel__hint--block">
+                  Texto seleccionable, máx. {{ aiSourcePdfMaxMb }} MB por archivo.
+                  La API valida que no intercambies libro y cuestionario.
+                </p>
+
+                <div class="tasks-ai-pdf-grid">
+                  <div class="tasks-ai-pdf-slot">
+                    <span class="tasks-ai-panel__label">Libro / lectura</span>
+                    @if (bookPdfFile(); as book) {
+                      <div class="tasks-ai-pdf-file">
+                        <ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>
+                        <div class="tasks-ai-pdf-file__meta">
+                          <strong>{{ book.name }}</strong>
+                          <small>{{ formatFileSize(book.size) }}</small>
+                        </div>
+                        <button
+                          type="button"
+                          class="tasks-ai-pdf-file__clear"
+                          aria-label="Quitar PDF del libro"
+                          (click)="clearBookPdf()"
+                        >
+                          <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                        </button>
+                      </div>
+                    } @else {
+                      <label class="tasks-ai-pdf-upload">
+                        <ion-icon name="cloud-upload-outline" aria-hidden="true"></ion-icon>
+                        <span>Subir libro o capítulo</span>
+                        <input
+                          #bookInput
+                          type="file"
+                          accept="application/pdf,.pdf"
+                          (change)="onBookPdfSelected($event)"
+                        />
+                      </label>
+                    }
+                  </div>
+
+                  <div class="tasks-ai-pdf-slot">
+                    <span class="tasks-ai-panel__label">Cuestionario</span>
+                    @if (questionnairePdfFile(); as questionnaire) {
+                      <div class="tasks-ai-pdf-file">
+                        <ion-icon name="help-circle-outline" aria-hidden="true"></ion-icon>
+                        <div class="tasks-ai-pdf-file__meta">
+                          <strong>{{ questionnaire.name }}</strong>
+                          <small>{{ formatFileSize(questionnaire.size) }}</small>
+                        </div>
+                        <button
+                          type="button"
+                          class="tasks-ai-pdf-file__clear"
+                          aria-label="Quitar PDF del cuestionario"
+                          (click)="clearQuestionnairePdf()"
+                        >
+                          <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+                        </button>
+                      </div>
+                    } @else {
+                      <label class="tasks-ai-pdf-upload">
+                        <ion-icon name="cloud-upload-outline" aria-hidden="true"></ion-icon>
+                        <span>Subir cuestionario</span>
+                        <input
+                          #questionnaireInput
+                          type="file"
+                          accept="application/pdf,.pdf"
+                          (change)="onQuestionnairePdfSelected($event)"
+                        />
+                      </label>
+                    }
+                  </div>
+                </div>
+
+                @if (aiPdfModeHint(); as modeHint) {
+                  <p class="tasks-ai-panel__mode-hint" role="status">
+                    {{ modeHint }}
+                  </p>
+                }
+              </div>
+
+              <div class="tasks-ai-panel__card">
+                <div class="tasks-ai-panel__field tasks-ai-panel__field--notes">
+                  <label class="tasks-ai-panel__label" for="task-ai-notes">
+                    Observaciones para la IA
+                  </label>
+                  <p class="tasks-ai-panel__hint">
+                    Opcional. Indicá temas, enfoque o requisitos extra para el
+                    prompt de Gemini.
+                  </p>
+                  <ion-textarea
+                    id="task-ai-notes"
+                    formControlName="focusNotes"
+                    class="tasks-ai-panel__textarea"
+                    fill="outline"
+                    autoGrow="true"
+                    rows="2"
+                    maxlength="800"
+                    placeholder="Ej.: Enfocarse en ecología urbana o responder todas las preguntas del cuestionario."
+                  ></ion-textarea>
+                  <span class="tasks-ai-panel__counter">
+                    {{ form.controls.focusNotes.value.length }}/800
+                  </span>
+                </div>
+
+                <div class="tasks-ai-panel__divider" aria-hidden="true"></div>
+
+                <ion-item class="tasks-ai-panel__toggle" lines="none">
+                  <ion-toggle
+                    formControlName="advancedMode"
+                    labelPlacement="start"
+                    justify="space-between"
+                    (ionChange)="onAdvancedModeToggle($any($event).detail.checked)"
+                  >
+                    <div class="tasks-ai-panel__toggle-text">
+                      <strong>Modo avanzado</strong>
+                      <small>Elegís páginas, enfoque y exposición.</small>
+                    </div>
+                  </ion-toggle>
+                </ion-item>
+
+                @if (!form.controls.advancedMode.value) {
+                  <p class="tasks-ai-panel__standard-hint">
+                    Sin modo avanzado: investigación estándar con introducción,
+                    desarrollo, conclusión y referencias APA (~5 páginas).
+                  </p>
+                } @else {
+                  <div class="tasks-ai-panel__advanced">
+                    <div class="tasks-ai-panel__field">
+                      <div class="tasks-ai-panel__field-head">
+                        <ion-icon
+                          name="document-text-outline"
+                          aria-hidden="true"
+                        ></ion-icon>
+                        <div>
+                          <span class="tasks-ai-panel__label"
+                            >Extensión de la investigación</span
+                          >
+                          <span class="tasks-ai-panel__value">
+                            {{ form.controls.targetPages.value }} páginas
+                          </span>
+                        </div>
+                      </div>
+                      <ion-range
+                        formControlName="targetPages"
+                        [min]="aiMinPages"
+                        [max]="aiMaxPages"
+                        [step]="1"
+                        [pin]="true"
+                        [snaps]="true"
+                        color="primary"
+                        aria-label="Cantidad de páginas de la investigación"
+                      ></ion-range>
+                      <div class="tasks-ai-panel__range-labels">
+                        <span>{{ aiMinPages }} pág.</span>
+                        <span>{{ aiMaxPages }} pág.</span>
+                      </div>
+                    </div>
+
+                    <div class="tasks-ai-panel__divider" aria-hidden="true"></div>
+
+                    <ion-item
+                      class="tasks-ai-panel__toggle tasks-ai-panel__toggle--presentation"
+                      lines="none"
+                    >
+                      <ion-icon
+                        slot="start"
+                        name="easel-outline"
+                        aria-hidden="true"
+                      ></ion-icon>
+                      <ion-toggle
+                        formControlName="forPresentation"
+                        labelPlacement="start"
+                        justify="space-between"
+                      >
+                        <div class="tasks-ai-panel__toggle-text">
+                          <strong>Material de exposición</strong>
+                          <small
+                            >Guía PDF + PowerPoint en el mismo correo.</small
+                          >
+                        </div>
+                      </ion-toggle>
+                    </ion-item>
+
+                    @if (form.controls.forPresentation.value) {
+                      <div class="tasks-ai-panel__field tasks-ai-panel__field--slides">
+                        <div class="tasks-ai-panel__field-head">
+                          <ion-icon
+                            name="easel-outline"
+                            aria-hidden="true"
+                          ></ion-icon>
+                          <div>
+                            <span class="tasks-ai-panel__label"
+                              >Diapositivas del PowerPoint</span
+                            >
+                            <span class="tasks-ai-panel__value">
+                              {{ form.controls.presentationSlides.value }}
+                              diapositivas
+                            </span>
+                          </div>
+                        </div>
+                        <ion-range
+                          formControlName="presentationSlides"
+                          [min]="aiMinSlides"
+                          [max]="aiMaxSlides"
+                          [step]="1"
+                          [pin]="true"
+                          [snaps]="true"
+                          color="primary"
+                          aria-label="Cantidad de diapositivas"
+                        ></ion-range>
+                        <div class="tasks-ai-panel__range-labels">
+                          <span>{{ aiMinSlides }}</span>
+                          <span>{{ aiMaxSlides }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </section>
+          }
         </ion-list>
         <ion-button
           expand="block"

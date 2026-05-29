@@ -203,6 +203,38 @@
   background: var(--app-accent-soft);
 }
 
+.tasks-card__ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  padding: 0.28rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+
+  ion-icon {
+    font-size: 0.75rem;
+  }
+}
+
+.tasks-card__ai-badge[data-tone='primary'] {
+  color: var(--ion-color-primary);
+  background: var(--app-accent-soft);
+}
+
+.tasks-card__ai-badge[data-tone='warning'] {
+  color: var(--ion-color-warning-shade, #e0ac08);
+  background: rgba(var(--ion-color-warning-rgb, 245, 158, 11), 0.18);
+}
+
+.tasks-card__ai-badge[data-tone='danger'] {
+  color: var(--ion-color-danger, #eb445a);
+  background: rgba(var(--ion-color-danger-rgb, 239, 68, 68), 0.14);
+}
+
 .tasks-card__badge[data-tone='danger'] {
   background: rgba(var(--ion-color-danger-rgb, 239, 68, 68), 0.14);
   color: var(--ion-color-danger, #eb445a);
@@ -342,53 +374,6 @@
     transform: scale(0.92);
     background: rgba(var(--ion-color-danger-rgb, 239, 68, 68), 0.12);
     color: var(--ion-color-danger, #eb445a);
-  }
-}
-
-.tasks-ai-option {
-  --background: linear-gradient(
-    135deg,
-    var(--app-accent-soft) 0%,
-    var(--app-surface) 70%
-  );
-  --border-radius: var(--app-radius-md);
-  --padding-start: 0.85rem;
-  --inner-padding-end: 0.85rem;
-  margin-top: 0.75rem;
-  border: 1px solid rgba(var(--ion-color-primary-rgb), 0.16);
-  border-radius: var(--app-radius-md);
-  box-shadow: var(--app-shadow-sm);
-
-  ion-icon {
-    color: var(--ion-color-primary);
-    font-size: 1.25rem;
-  }
-
-  ion-toggle {
-    width: 100%;
-    --track-background: var(--app-surface-elevated);
-    --track-background-checked: var(--ion-color-primary);
-    --handle-background: var(--app-surface);
-    --handle-background-checked: var(--ion-color-primary-contrast);
-  }
-}
-
-.tasks-ai-option__text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.55rem 0;
-
-  strong {
-    font-size: 0.9375rem;
-    color: var(--ion-text-color);
-  }
-
-  small {
-    max-width: 13rem;
-    font-size: 0.75rem;
-    line-height: 1.35;
-    color: var(--app-text-secondary);
   }
 }
 

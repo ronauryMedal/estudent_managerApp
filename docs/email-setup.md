@@ -1,4 +1,9 @@
-# Correo para recordatorios de tareas
+# Correo para recordatorios e investigaciones IA
+
+El backend usa la misma configuración SMTP para:
+
+1. Recordatorios automáticos de tareas.
+2. Envío del material generado por investigaciones IA (`generateAiResearch: true` o `POST /tasks/:id/ai-research`) en **un solo correo** con 1 a 3 adjuntos según el modo.
 
 Al crear una tarea (`POST /tasks`), el backend programa **dos recordatorios automáticos**:
 
@@ -67,6 +72,15 @@ docker compose exec api npx prisma migrate deploy
 ## Probar sin correo
 
 Con `MAIL_ENABLED=false` (default) solo se crean **notificaciones in-app**; en logs verás `correo: omitido`.
+
+En investigaciones IA, aunque el correo esté desactivado, los archivos pueden quedar en `task.aiResearch` (`pdfUrl`, `presentationPdfUrl`, `pptxUrl`) y el frontend recibe notificaciones in-app (`GENERAL`) sobre espera, proceso, éxito o fallo.
+
+### Adjuntos en investigaciones IA
+
+| Modo | Adjuntos en el correo |
+|------|------------------------|
+| Estándar | `investigacion-*.pdf` |
+| Avanzado + `forPresentation` | Investigación PDF + guía exposición PDF + `presentacion-*.pptx` |
 
 ---
 

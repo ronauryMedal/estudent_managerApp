@@ -562,9 +562,82 @@ Body:
   "description": "Capitulo 1",
   "dueDate": "2026-05-20T23:59:00.000Z",
   "subjectId": "subject_uuid",
-  "generateAiResearch": true
+  "generateAiResearch": true,
+  "aiResearchOptions": {
+    "basedOnUploadedPdf": true,
+    "advancedMode": true,
+    "targetPages": 8,
+    "focusNotes": "Enfocarse en ecología urbana",
+    "forPresentation": true,
+    "presentationSlides": 10
+  }
 }
 ```
+
+`aiResearchOptions` es opcional. Sin `advancedMode: true` solo se genera la investigación estándar (~5 páginas). Con modo avanzado puedes elegir extensión, énfasis y material de exposición.
+
+### PDFs: libro, cuestionario e investigación
+
+`POST /tasks/:id/ai-research` acepta **`multipart/form-data`** con hasta **dos PDFs** identificados por nombre de campo (no hace falta adivinar el tipo):
+
+| Campo | Rol | Descripción |
+|-------|-----|-------------|
+| `bookPdf` | Libro / lectura | Material de donde sacar respuestas o la investigación |
+| `questionnairePdf` | Cuestionario | Preguntas a responder |
+| `sourcePdf` | Alias | Igual que `bookPdf` (compatibilidad) |
+| `aiResearchOptions` | string JSON | Opciones (ver abajo) |
+
+**Modos automáticos** (`researchMode` en la respuesta):
+
+| PDFs subidos | Comportamiento |
+|--------------|----------------|
+| Libro + cuestionario | Responde con **solo Gemini** leyendo tus PDFs (**sin internet**, sin costo de búsqueda) |
+| Solo cuestionario | Responde con **búsqueda en Google** (Gemini + Google Search; puede consumir más cuota) |
+| Solo libro (`basedOnUploadedPdf`) | Investigación / resumen desde el libro |
+| Ninguno | Investigación estándar (título + descripción) |
+
+La API puede **validar** que no intercambiaste archivos (`validateDocumentTypes: true`, default) usando una clasificación rápida del texto (libro vs cuestionario).
+
+Ejemplo (Ionic / Angular con `FormData`):
+
+```typescript
+const form = new FormData();
+form.append('bookPdf', libroFile);
+form.append('questionnairePdf', cuestionarioFile);
+form.append(
+  'aiResearchOptions',
+  JSON.stringify({
+    questionnaireMode: true,
+    validateDocumentTypes: true,
+    advancedMode: true,
+    forPresentation: false,
+  }),
+);
+
+// Solo cuestionario (busca en internet):
+form.append('questionnairePdf', cuestionarioFile);
+form.append(
+  'aiResearchOptions',
+  JSON.stringify({
+    questionnaireMode: true,
+    useWebResearch: true,
+  }),
+);
+await fetch(`${API}/tasks/${taskId}/ai-research`, {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}` },
+  body: form,
+});
+```
+
+También puedes seguir usando **solo JSON** (`application/json`) si no subes PDF (modo clásico sin `basedOnUploadedPdf`).
+
+Requisitos del PDF:
+
+- Formato PDF con **texto seleccionable** (no solo imagen escaneada sin OCR).
+- Tamaño máximo por defecto: **15 MB** (`AI_SOURCE_PDF_MAX_MB` en `.env`).
+
+En `aiResearch` completado verás `basedOnUploadedPdf: true` y `sourcePdfUrl` (referencia al PDF subido; el entregable principal sigue llegando por correo).
 
 `userId` no se envía; viene del JWT.
 
@@ -591,10 +664,16 @@ El backend solo actualiza tareas del usuario autenticado.
 `generateAiResearch` es opcional. Si viene `true`, el backend:
 
 1. Crea la tarea.
-2. Genera una investigación con Gemini usando `title`, `description` y la materia.
-3. Convierte el contenido a PDF.
-4. Envía el PDF al correo del estudiante.
-5. Guarda el estado en `task.aiResearch`.
+2. Deja la investigación IA en cola (`PENDING`) y responde rápido al frontend.
+3. En segundo plano cambia a `PROCESSING`, genera una investigación con Gemini usando `title`, `description` y la materia.
+4. Convierte el contenido a PDF.
+5. Si `forPresentation` está activo, genera guía de exposición (PDF) y PowerPoint (.pptx).
+6. Envía **un solo correo** con todos los adjuntos (1, 2 o 3 archivos según el modo).
+7. Guarda el estado en `task.aiResearch`.
+
+La investigación generada incluye introducción, desarrollo, análisis, conclusión y referencias APA. El PDF se genera con formato limpio, sin Markdown (`#`, `*`) y con contenido suficiente para aproximarse a 5 páginas o más.
+
+El backend intenta varios modelos Gemini antes de fallar. Si los modelos están ocupados, mantiene `status: "PROCESSING"`, espera y reintenta automáticamente en segundo plano. El frontend no debe bloquear la pantalla esperando la respuesta final; debe mostrar un indicador de “generando” y consultar el estado con `GET /tasks/:id` o usando notificaciones.
 
 Respuesta esperada al inicio:
 
@@ -615,16 +694,54 @@ Estados posibles:
 | Estado | Significado |
 |--------|-------------|
 | `PENDING` | Solicitud creada, esperando procesamiento |
-| `PROCESSING` | Gemini/PDF/correo en ejecución |
-| `COMPLETED` | PDF generado; si el correo estaba activo, enviado |
-| `FAILED` | Falló Gemini, PDF o configuración; revisar `error` |
+| `PROCESSING` | Gemini/PDF/correo en ejecución. También cubre espera por modelos ocupados |
+| `COMPLETED` | Archivos generados; si el correo estaba activo, enviado en un solo mensaje |
+| `FAILED` | Falló Gemini, PDF o configuración después de agotar reintentos; revisar `error` |
+
+Mientras `status` sea `PROCESSING`, `error` puede traer un mensaje temporal de espera:
+
+```json
+{
+  "aiResearch": {
+    "status": "PROCESSING",
+    "pdfUrl": null,
+    "error": "Gemini está ocupado. Reintentando con otros modelos en 60 segundos (ronda 2/12)."
+  }
+}
+```
+
+Ese mensaje es informativo. No lo muestres como error final hasta que `status` sea `FAILED`.
 
 También puedes generar la investigación después:
 
 ```http
 POST /tasks/:id/ai-research
 Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "aiResearchOptions": {
+    "advancedMode": true,
+    "targetPages": 10,
+    "forPresentation": true,
+    "presentationSlides": 12
+  }
+}
 ```
+
+El body es opcional; sin opciones se usa el modo estándar.
+
+Cuando `status` es `COMPLETED`, `aiResearch` puede incluir:
+
+| Campo | Descripción |
+|-------|-------------|
+| `pdfUrl` | Investigación principal |
+| `presentationPdfUrl` | Guía de exposición (solo si `forPresentation`) |
+| `pptxUrl` | PowerPoint (solo si `forPresentation`) |
+| `basedOnUploadedPdf`, `sourcePdfUrl` | Si la investigación se generó desde un PDF subido |
+| `advancedMode`, `targetPages`, `focusNotes`, `forPresentation`, `presentationSlides` | Opciones usadas en la generación |
+
+El frontend **no debe ofrecer descarga** como flujo principal: los archivos llegan por correo. Las URLs son de respaldo o consulta.
 
 El PDF queda disponible en `aiResearch.pdfUrl`, por ejemplo:
 
@@ -634,7 +751,79 @@ Variables necesarias en `.env`:
 
 ```env
 GEMINI_API_KEY=tu-api-key-de-google-ai-studio
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-flash-lite
+GEMINI_FALLBACK_MODELS=gemini-flash-lite-latest,gemini-3.1-flash-lite,gemini-3.1-flash-lite-preview,gemini-3.5-flash,gemini-2.5-flash
+GEMINI_RETRY_ROUNDS=12
+GEMINI_RETRY_WAIT_SECONDS=60
+PEXELS_API_KEY=tu-api-key-pexels
+AI_RESEARCH_MIN_PAGES=3
+AI_RESEARCH_MAX_PAGES=15
+AI_PRESENTATION_MAX_SLIDES=20
+AI_SOURCE_PDF_MAX_MB=15
+AI_SOURCE_PDF_MAX_TEXT_CHARS=100000
+```
+
+### Notificaciones in-app
+
+El backend usa la tabla `Notification` para avisar cambios al frontend. Para investigaciones IA crea notificaciones tipo `GENERAL`:
+
+| Título | Uso en frontend |
+|--------|-----------------|
+| `Investigación IA en espera` | Mostrar que la solicitud entró en cola |
+| `Investigación IA en proceso` | Mostrar “generando PDF” |
+| `Investigación IA esperando modelo` | Mostrar “Gemini ocupado, reintentando automáticamente” |
+| `Material académico listo` | Modo exposición: éxito; archivos enviados por correo |
+| `Investigación IA lista` | Modo estándar: éxito; PDF enviado por correo |
+| `Generando material de exposición` | Guía PDF y PPTX en progreso |
+| `Investigación IA falló` | Mostrar error final y botón de reintentar |
+
+Consultar notificaciones:
+
+```http
+GET /notifications/me
+Authorization: Bearer <token>
+```
+
+Respuesta:
+
+```json
+{
+  "items": [
+    {
+      "id": "notification_uuid",
+      "title": "Investigación IA esperando modelo",
+      "message": "Los modelos de Gemini están ocupados. La tarea seguirá intentando automáticamente en segundo plano.",
+      "type": "GENERAL",
+      "isRead": false,
+      "createdAt": "2026-05-26T16:22:28.651Z",
+      "userId": "user_uuid"
+    }
+  ],
+  "unreadCount": 1
+}
+```
+
+Marcar una notificación como leída:
+
+```http
+PATCH /notifications/:id/read
+Authorization: Bearer <token>
+```
+
+Marcar todas como leídas:
+
+```http
+PATCH /notifications/me/read-all
+Authorization: Bearer <token>
+```
+
+`GET /dashboard/me` también incluye:
+
+```json
+{
+  "notifications": [],
+  "unreadNotifications": 0
+}
 ```
 
 ### Recordatorios automáticos

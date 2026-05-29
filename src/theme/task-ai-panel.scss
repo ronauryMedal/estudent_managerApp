@@ -1,0 +1,406 @@
+/* Opciones de investigación IA en modal de nueva tarea. */
+
+.tasks-ai-option {
+  --background: linear-gradient(
+    135deg,
+    var(--app-accent-soft) 0%,
+    var(--app-surface) 70%
+  );
+  --border-radius: var(--app-radius-md);
+  --padding-start: 0.85rem;
+  --inner-padding-end: 0.85rem;
+  margin-top: 0.75rem;
+  border: 1px solid rgba(var(--ion-color-primary-rgb), 0.16);
+  border-radius: var(--app-radius-md);
+  box-shadow: var(--app-shadow-sm);
+
+  ion-icon {
+    color: var(--ion-color-primary);
+    font-size: 1.25rem;
+  }
+
+  ion-toggle {
+    width: 100%;
+    --track-background: var(--app-surface-elevated);
+    --track-background-checked: var(--ion-color-primary);
+    --handle-background: var(--app-surface);
+    --handle-background-checked: var(--ion-color-primary-contrast);
+  }
+}
+
+.tasks-ai-option__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0;
+
+  strong {
+    font-size: 0.9375rem;
+    color: var(--ion-text-color);
+  }
+
+  small {
+    max-width: 14rem;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--app-text-secondary);
+  }
+}
+
+.tasks-ai-panel {
+  margin: 0.85rem 0 0.25rem;
+  animation: tasks-ai-panel-in 0.28s ease-out;
+}
+
+@keyframes tasks-ai-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tasks-ai-panel__intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+
+  > ion-icon {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    font-size: 1.15rem;
+    color: var(--ion-color-primary);
+  }
+
+  h3 {
+    margin: 0 0 0.2rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ion-text-color);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--app-text-secondary);
+  }
+}
+
+.tasks-ai-panel__card {
+  padding: 0.85rem 0.9rem 0.95rem;
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface-elevated);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.tasks-ai-panel__toggle {
+  --background: transparent;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  --min-height: auto;
+
+  ion-toggle {
+    width: 100%;
+    --track-background: var(--app-surface);
+    --track-background-checked: var(--ion-color-primary);
+    --handle-background: var(--app-surface);
+    --handle-background-checked: var(--ion-color-primary-contrast);
+  }
+}
+
+.tasks-ai-panel__toggle--presentation {
+  margin-top: 0.15rem;
+
+  ion-icon {
+    color: var(--ion-color-primary);
+    font-size: 1.2rem;
+  }
+}
+
+.tasks-ai-panel__toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 0.35rem 0;
+
+  strong {
+    font-size: 0.875rem;
+    font-weight: 650;
+    color: var(--ion-text-color);
+  }
+
+  small {
+    font-size: 0.72rem;
+    line-height: 1.35;
+    color: var(--app-text-secondary);
+  }
+}
+
+.tasks-ai-panel__standard-hint {
+  margin: 0.55rem 0 0;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--app-text-secondary);
+  background: var(--app-surface);
+  border-radius: var(--app-radius-sm);
+  border: 1px dashed var(--app-border);
+}
+
+.tasks-ai-panel__advanced {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--app-border);
+}
+
+.tasks-ai-panel__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.tasks-ai-panel__field-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+
+  > ion-icon {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    font-size: 1.1rem;
+    color: var(--ion-color-primary);
+  }
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+}
+
+.tasks-ai-panel__label {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--ion-text-color);
+}
+
+.tasks-ai-panel__value {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.tasks-ai-panel__hint {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--app-text-muted);
+}
+
+.tasks-ai-panel__range-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -0.15rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tasks-ai-panel__textarea {
+  --background: var(--app-surface);
+  --border-radius: var(--app-radius-sm);
+  --padding-start: 0.75rem;
+  --padding-end: 0.75rem;
+  --padding-top: 0.65rem;
+  --padding-bottom: 0.65rem;
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+}
+
+.tasks-ai-panel__counter {
+  align-self: flex-end;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tasks-ai-panel__divider {
+  height: 1px;
+  margin: 0.1rem 0;
+  background: var(--app-border);
+}
+
+.tasks-ai-panel__field--slides {
+  padding: 0.65rem 0.7rem 0.75rem;
+  border-radius: var(--app-radius-sm);
+  background: linear-gradient(
+    135deg,
+    var(--app-accent-soft) 0%,
+    var(--app-surface) 85%
+  );
+  border: 1px solid rgba(var(--ion-color-primary-rgb), 0.14);
+}
+
+.tasks-ai-panel__card--pdfs {
+  margin-bottom: 0.75rem;
+}
+
+.tasks-ai-panel__section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ion-text-color);
+
+  ion-icon {
+    font-size: 1.05rem;
+    color: var(--ion-color-primary);
+  }
+}
+
+.tasks-ai-panel__hint--block {
+  margin-bottom: 0.75rem;
+}
+
+.tasks-ai-pdf-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+@media (min-width: 520px) {
+  .tasks-ai-pdf-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.tasks-ai-pdf-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.tasks-ai-pdf-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 5.5rem;
+  padding: 0.75rem;
+  border-radius: var(--app-radius-sm);
+  border: 1.5px dashed rgba(var(--ion-color-primary-rgb), 0.28);
+  background: var(--app-surface);
+  color: var(--ion-color-primary);
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+
+  ion-icon {
+    font-size: 1.35rem;
+  }
+
+  input {
+    display: none;
+  }
+
+  &:active {
+    background: var(--app-accent-soft);
+    border-color: rgba(var(--ion-color-primary-rgb), 0.45);
+  }
+}
+
+.tasks-ai-pdf-file {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 5.5rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: var(--app-radius-sm);
+  border: 1px solid rgba(var(--ion-color-primary-rgb), 0.2);
+  background: var(--app-accent-soft);
+
+  > ion-icon {
+    flex-shrink: 0;
+    font-size: 1.35rem;
+    color: var(--ion-color-primary);
+  }
+}
+
+.tasks-ai-pdf-file__meta {
+  flex: 1;
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--ion-text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    font-size: 0.6875rem;
+    color: var(--app-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.tasks-ai-pdf-file__clear {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--app-text-muted);
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 1.25rem;
+  }
+
+  &:active {
+    color: var(--ion-color-danger);
+    background: rgba(var(--ion-color-danger-rgb, 239, 68, 68), 0.1);
+  }
+}
+
+.tasks-ai-panel__mode-hint {
+  margin: 0.75rem 0 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--app-radius-sm);
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--ion-color-primary);
+  background: rgba(var(--ion-color-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--ion-color-primary-rgb), 0.16);
+}

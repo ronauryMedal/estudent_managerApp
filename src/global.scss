@@ -44,6 +44,7 @@
 @include meta.load-css('./theme/card-accents');
 @include meta.load-css('./theme/subject-cards');
 @include meta.load-css('./theme/task-filters');
+@include meta.load-css('./theme/task-ai-panel');
 
 /* Ionic asigna .ion-page al host del componente enlazado (p. ej. app-login) */
 /* Auth usa el lienzo y los tokens actuales de la app. */

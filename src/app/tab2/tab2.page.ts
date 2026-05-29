@@ -17,6 +17,7 @@ import {
   IonLabel,
   IonList,
   IonModal,
+  IonRange,
   IonRefresher,
   IonRefresherContent,
   IonSelect,
@@ -36,12 +37,23 @@ import {
   calendarOutline,
   checkmarkDoneOutline,
   clipboardOutline,
+  closeCircleOutline,
+  cloudUploadOutline,
+  documentTextOutline,
+  easelOutline,
+  helpCircleOutline,
+  libraryOutline,
+  optionsOutline,
   sparklesOutline,
   trashOutline,
 } from 'ionicons/icons';
 
 import { Subject } from '../core/models/subject.model';
-import { Task } from '../core/models/task.model';
+import {
+  AiResearchOptions,
+  CreateTaskRequest,
+  Task,
+} from '../core/models/task.model';
 import { StudentNotifyService } from '../core/services/student-notify.service';
 import { StudentSubjectsService } from '../core/services/student-subjects.service';
 import { StudentTaskNotificationsService } from '../core/services/student-task-notifications.service';
@@ -96,9 +108,22 @@ type TaskFilter = 'pending' | 'completed';
     IonFab,
     IonFabButton,
     IonModal,
+    IonRange,
   ],
 })
 export class Tab2Page {
+  /** Límites alineados con `AI_RESEARCH_*` del backend. */
+  static readonly AI_MIN_PAGES = 3;
+  static readonly AI_MAX_PAGES = 15;
+  static readonly AI_MIN_SLIDES = 5;
+  static readonly AI_MAX_SLIDES = 20;
+  static readonly AI_SOURCE_PDF_MAX_MB = 15;
+
+  readonly aiMinPages = Tab2Page.AI_MIN_PAGES;
+  readonly aiMaxPages = Tab2Page.AI_MAX_PAGES;
+  readonly aiMinSlides = Tab2Page.AI_MIN_SLIDES;
+  readonly aiMaxSlides = Tab2Page.AI_MAX_SLIDES;
+  readonly aiSourcePdfMaxMb = Tab2Page.AI_SOURCE_PDF_MAX_MB;
   private readonly fb = inject(FormBuilder);
   private readonly tasksApi = inject(StudentTasksService);
   private readonly subjectsApi = inject(StudentSubjectsService);
@@ -120,6 +145,11 @@ export class Tab2Page {
   readonly tasks = signal<Task[]>([]);
   readonly taskFilter = signal<TaskFilter>('pending');
   readonly planSubjects = signal<Subject[]>([]);
+  readonly bookPdfFile = signal<File | null>(null);
+  readonly questionnairePdfFile = signal<File | null>(null);
+  readonly aiPdfModeHint = computed(() =>
+    this.describeAiPdfMode(this.bookPdfFile(), this.questionnairePdfFile()),
+  );
   readonly pendingTasks = computed(() => openTasks(this.tasks()));
   readonly completedTasks = computed(() =>
     sortTasksByDue(dedupeTasks(this.tasks()).filter((task) => taskIsCompleted(task))),
@@ -159,6 +189,23 @@ export class Tab2Page {
     dueDate: ['', Validators.required],
     subjectId: ['', Validators.required],
     generateAiResearch: [false],
+    advancedMode: [false],
+    targetPages: [
+      8,
+      [
+        Validators.min(Tab2Page.AI_MIN_PAGES),
+        Validators.max(Tab2Page.AI_MAX_PAGES),
+      ],
+    ],
+    focusNotes: ['', Validators.maxLength(800)],
+    forPresentation: [false],
+    presentationSlides: [
+      10,
+      [
+        Validators.min(Tab2Page.AI_MIN_SLIDES),
+        Validators.max(Tab2Page.AI_MAX_SLIDES),
+      ],
+    ],
   });
 
   constructor() {
@@ -168,6 +215,13 @@ export class Tab2Page {
       clipboardOutline,
       calendarOutline,
       checkmarkDoneOutline,
+      closeCircleOutline,
+      cloudUploadOutline,
+      documentTextOutline,
+      easelOutline,
+      helpCircleOutline,
+      libraryOutline,
+      optionsOutline,
       sparklesOutline,
       trashOutline,
     });
@@ -305,12 +359,86 @@ export class Tab2Page {
       dueDate: localDue,
       subjectId: this.planSubjects()[0]!.id,
       generateAiResearch: false,
+      advancedMode: false,
+      targetPages: 8,
+      focusNotes: '',
+      forPresentation: false,
+      presentationSlides: 10,
     });
+    this.resetAiPdfFiles();
     this.createOpen.set(true);
+  }
+
+  onAiResearchToggle(enabled: boolean): void {
+    if (!enabled) {
+      this.form.patchValue({
+        advancedMode: false,
+        forPresentation: false,
+      });
+      this.resetAiPdfFiles();
+    }
+  }
+
+  onAdvancedModeToggle(enabled: boolean): void {
+    if (!enabled) {
+      this.form.patchValue({ forPresentation: false });
+    }
   }
 
   closeCreateModal(): void {
     this.createOpen.set(false);
+    this.resetAiPdfFiles();
+  }
+
+  onBookPdfSelected(event: Event): void {
+    this.assignPdfFile(event, 'book');
+  }
+
+  onQuestionnairePdfSelected(event: Event): void {
+    this.assignPdfFile(event, 'questionnaire');
+  }
+
+  clearBookPdf(): void {
+    this.bookPdfFile.set(null);
+  }
+
+  clearQuestionnairePdf(): void {
+    this.questionnairePdfFile.set(null);
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) {
+      return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  aiResearchStatusLabel(task: Task): string | null {
+    const status = task.aiResearch?.status;
+    if (status === 'PENDING') {
+      return 'IA en cola';
+    }
+    if (status === 'PROCESSING') {
+      return 'Generando IA…';
+    }
+    if (status === 'FAILED') {
+      return 'IA falló';
+    }
+    return null;
+  }
+
+  aiResearchStatusTone(task: Task): string {
+    const status = task.aiResearch?.status;
+    if (status === 'FAILED') {
+      return 'danger';
+    }
+    if (status === 'PROCESSING') {
+      return 'warning';
+    }
+    return 'primary';
   }
 
   submitCreate(): void {
@@ -329,19 +457,42 @@ export class Tab2Page {
       return;
     }
 
-    const body = {
+    const pdfFiles = {
+      bookPdf: this.bookPdfFile() ?? undefined,
+      questionnairePdf: this.questionnairePdfFile() ?? undefined,
+    };
+    const hasPdfs = !!(pdfFiles.bookPdf || pdfFiles.questionnairePdf);
+
+    if (hasPdfs && !this.isOnline()) {
+      void this.notify.warning(
+        'Subir PDFs para la investigación IA requiere conexión a internet.',
+      );
+      return;
+    }
+
+    const aiResearchOptions = v.generateAiResearch
+      ? this.buildAiResearchOptions(v, pdfFiles)
+      : undefined;
+
+    const body: CreateTaskRequest = {
       title: v.title.trim(),
       description: v.description.trim() || undefined,
       dueDate: due.toISOString(),
       subjectId: v.subjectId,
       generateAiResearch: v.generateAiResearch,
+      ...(aiResearchOptions && !hasPdfs ? { aiResearchOptions } : {}),
     };
+
+    const aiExtras =
+      v.generateAiResearch && hasPdfs && aiResearchOptions
+        ? { pdfFiles, aiResearchOptions }
+        : undefined;
 
     this.createSub?.unsubscribe();
     this.createSubmitting.set(true);
     let createdOffline = false;
     this.createSub = this.tasksApi
-      .create(body)
+      .create(body, aiExtras)
       .pipe(
         switchMap((task) => {
           createdOffline = this.isPendingTask(task);
@@ -358,14 +509,17 @@ export class Tab2Page {
           void this.notify.success(
             createdOffline
               ? 'Tarea guardada sin conexión. Se sincronizará al volver internet.'
-              : v.generateAiResearch
-                ? 'Tarea creada. La IA generará el PDF y lo enviará a tu correo.'
-                : 'Tarea creada.',
+              : this.createSuccessMessage(v, pdfFiles),
           );
+          this.resetAiPdfFiles();
           this.closeCreateModal();
         },
-        error: () => {
-          void this.notify.error('No se pudo crear la tarea.');
+        error: (err: unknown) => {
+          const message =
+            err instanceof Error
+              ? err.message
+              : 'No se pudo crear la tarea.';
+          void this.notify.error(message);
         },
       });
   }
@@ -514,6 +668,146 @@ export class Tab2Page {
           this.reload();
         },
       });
+  }
+
+  private buildAiResearchOptions(
+    v: ReturnType<typeof this.form.getRawValue>,
+    pdfFiles: { bookPdf?: File; questionnairePdf?: File },
+  ): AiResearchOptions | undefined {
+    if (!v.generateAiResearch) {
+      return undefined;
+    }
+
+    const hasBook = !!pdfFiles.bookPdf;
+    const hasQuestionnaire = !!pdfFiles.questionnairePdf;
+
+    if (!hasBook && !hasQuestionnaire && !v.advancedMode) {
+      return undefined;
+    }
+
+    const options: AiResearchOptions = {
+      validateDocumentTypes: true,
+    };
+
+    if (hasBook && hasQuestionnaire) {
+      options.questionnaireMode = true;
+    } else if (hasQuestionnaire) {
+      options.questionnaireMode = true;
+      options.useWebResearch = true;
+    } else if (hasBook) {
+      options.basedOnUploadedPdf = true;
+    }
+
+    if (v.advancedMode) {
+      options.advancedMode = true;
+      options.targetPages = this.clamp(
+        v.targetPages,
+        Tab2Page.AI_MIN_PAGES,
+        Tab2Page.AI_MAX_PAGES,
+      );
+
+      if (v.forPresentation) {
+        options.forPresentation = true;
+        options.presentationSlides = this.clamp(
+          v.presentationSlides,
+          Tab2Page.AI_MIN_SLIDES,
+          Tab2Page.AI_MAX_SLIDES,
+        );
+      }
+    }
+
+    const notes = v.focusNotes.trim();
+    if (notes) {
+      options.focusNotes = notes;
+    }
+
+    return options;
+  }
+
+  private createSuccessMessage(
+    v: ReturnType<typeof this.form.getRawValue>,
+    pdfFiles: { bookPdf?: File; questionnairePdf?: File },
+  ): string {
+    if (!v.generateAiResearch) {
+      return 'Tarea creada.';
+    }
+
+    const hasBook = !!pdfFiles.bookPdf;
+    const hasQuestionnaire = !!pdfFiles.questionnairePdf;
+
+    if (hasBook && hasQuestionnaire) {
+      return 'Tarea creada. La IA responderá el cuestionario usando tu libro; te avisaremos por correo.';
+    }
+    if (hasQuestionnaire) {
+      return 'Tarea creada. La IA responderá el cuestionario buscando en internet; te avisaremos por correo.';
+    }
+    if (hasBook) {
+      return 'Tarea creada. La IA generará la investigación desde tu PDF; te avisaremos por correo.';
+    }
+    if (v.advancedMode && v.forPresentation) {
+      return 'Tarea creada. La IA preparará investigación, guía de exposición y PowerPoint; te avisaremos por correo.';
+    }
+    if (v.advancedMode) {
+      return `Tarea creada. La IA generará tu investigación (~${v.targetPages} páginas) y la enviará a tu correo.`;
+    }
+    return 'Tarea creada. La IA generará el PDF estándar y lo enviará a tu correo.';
+  }
+
+  private assignPdfFile(
+    event: Event,
+    kind: 'book' | 'questionnaire',
+  ): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (file.type !== 'application/pdf') {
+      void this.notify.warning('Solo se admiten archivos PDF.');
+      input.value = '';
+      return;
+    }
+
+    const maxBytes = Tab2Page.AI_SOURCE_PDF_MAX_MB * 1024 * 1024;
+    if (file.size > maxBytes) {
+      void this.notify.warning(
+        `El PDF supera el límite de ${Tab2Page.AI_SOURCE_PDF_MAX_MB} MB.`,
+      );
+      input.value = '';
+      return;
+    }
+
+    if (kind === 'book') {
+      this.bookPdfFile.set(file);
+    } else {
+      this.questionnairePdfFile.set(file);
+    }
+  }
+
+  private resetAiPdfFiles(): void {
+    this.bookPdfFile.set(null);
+    this.questionnairePdfFile.set(null);
+  }
+
+  private describeAiPdfMode(
+    book: File | null,
+    questionnaire: File | null,
+  ): string | null {
+    if (book && questionnaire) {
+      return 'Libro + cuestionario: respuestas solo con tu material (sin internet).';
+    }
+    if (questionnaire) {
+      return 'Solo cuestionario: la IA buscará respuestas en internet (Google Search).';
+    }
+    if (book) {
+      return 'Solo libro: investigación o resumen basado en tu PDF.';
+    }
+    return null;
+  }
+
+  private clamp(value: number, min: number, max: number): number {
+    return Math.min(max, Math.max(min, Math.round(value)));
   }
 
   private toDatetimeLocalValue(d: Date): string {

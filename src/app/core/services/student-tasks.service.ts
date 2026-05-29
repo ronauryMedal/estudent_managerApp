@@ -14,6 +14,9 @@ import {
 import { environment } from '../../../environments/environment';
 import { apiOrigin } from '../auth-storage';
 import {
+  AiResearchOptions,
+  AiResearchPdfFiles,
+  CreateTaskAiExtras,
   CreateTaskRequest,
   Task,
   UpdateTaskRequest,
@@ -58,21 +61,95 @@ export class StudentTasksService {
       );
   }
 
-  create(body: CreateTaskRequest): Observable<Task> {
+  create(body: CreateTaskRequest, aiExtras?: CreateTaskAiExtras): Observable<Task> {
     this.offlineStore.refreshPendingCount();
 
+    const pdfFiles = aiExtras?.pdfFiles;
+    const hasPdfs = this.hasPdfFiles(pdfFiles);
+    const wantsAi = !!body.generateAiResearch;
+
+    if (hasPdfs && wantsAi && !this.network.isOnline()) {
+      return throwError(
+        () => new Error('Subir PDFs para la IA requiere conexión a internet.'),
+      );
+    }
+
     if (!this.network.isOnline()) {
+      if (hasPdfs) {
+        return throwError(
+          () => new Error('Subir PDFs para la IA requiere conexión a internet.'),
+        );
+      }
       return of(this.offlineStore.addPendingCreate(body));
+    }
+
+    if (wantsAi && hasPdfs && aiExtras?.aiResearchOptions) {
+      const { generateAiResearch: _ai, aiResearchOptions: _opts, ...taskBody } =
+        body;
+      const createBody: CreateTaskRequest = {
+        ...taskBody,
+        generateAiResearch: false,
+      };
+
+      return this.http.post<Task>(`${this.apiBase}/tasks`, createBody).pipe(
+        switchMap((task) =>
+          this.requestAiResearch(
+            task.id,
+            aiExtras.aiResearchOptions!,
+            pdfFiles!,
+          ).pipe(
+            map((updated) => updated ?? task),
+            catchError((err: HttpErrorResponse) => {
+              this.offlineStore.upsertCachedTask(task);
+              return throwError(() => err);
+            }),
+          ),
+        ),
+        tap((task) => this.offlineStore.upsertCachedTask(task)),
+      );
     }
 
     return this.http.post<Task>(`${this.apiBase}/tasks`, body).pipe(
       tap((task) => this.offlineStore.upsertCachedTask(task)),
       catchError((err: HttpErrorResponse) => {
         if (this.isNetworkError(err)) {
+          if (hasPdfs) {
+            return throwError(
+              () =>
+                new Error(
+                  'Subir PDFs para la IA requiere conexión a internet.',
+                ),
+            );
+          }
           return of(this.offlineStore.addPendingCreate(body));
         }
         return throwError(() => err);
       }),
+    );
+  }
+
+  /** `POST /tasks/:id/ai-research` con PDFs (`multipart/form-data`). */
+  requestAiResearch(
+    taskId: string,
+    options: AiResearchOptions,
+    files: AiResearchPdfFiles,
+  ): Observable<Task> {
+    const form = new FormData();
+    if (files.bookPdf) {
+      form.append('bookPdf', files.bookPdf, files.bookPdf.name);
+    }
+    if (files.questionnairePdf) {
+      form.append(
+        'questionnairePdf',
+        files.questionnairePdf,
+        files.questionnairePdf.name,
+      );
+    }
+    form.append('aiResearchOptions', JSON.stringify(options));
+
+    return this.http.post<Task>(
+      `${this.apiBase}/tasks/${taskId}/ai-research`,
+      form,
     );
   }
 
@@ -124,6 +201,10 @@ export class StudentTasksService {
       switchMap(() => this.list()),
       finalize(() => this._syncingPendingCreates.set(false)),
     );
+  }
+
+  private hasPdfFiles(files?: AiResearchPdfFiles): boolean {
+    return !!(files?.bookPdf || files?.questionnairePdf);
   }
 
   private withPendingCreates(tasks: Task[]): Task[] {
