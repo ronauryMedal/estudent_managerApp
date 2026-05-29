@@ -15,24 +15,28 @@
           (click)="go('/profile')"
         >
           <div class="student-menu__profile-glow" aria-hidden="true"></div>
-          <ion-avatar class="student-menu__avatar" aria-hidden="true">
-            @if (user.avatarUrl) {
-              <img [src]="user.avatarUrl" [alt]="'Avatar de ' + user.name" />
-            } @else {
-              <span class="student-menu__initials">{{ initials() }}</span>
+          <div class="student-menu__avatar-wrap">
+            <ion-avatar class="student-menu__avatar" aria-hidden="true">
+              @if (user.avatarUrl) {
+                <img [src]="user.avatarUrl" [alt]="'Avatar de ' + user.name" />
+              } @else {
+                <span class="student-menu__initials">{{ initials() }}</span>
+              }
+            </ion-avatar>
+          </div>
+          <div class="student-menu__profile-meta">
+            <h2 class="student-menu__name">{{ user.name }}</h2>
+            <p class="student-menu__email">{{ user.email }}</p>
+            @if (user.role) {
+              <span class="student-menu__role">
+                {{ user.role === 'STUDENT' ? 'Estudiante' : user.role }}
+              </span>
             }
-          </ion-avatar>
-          <h2 class="student-menu__name">{{ user.name }}</h2>
-          <p class="student-menu__email">{{ user.email }}</p>
-          @if (user.role) {
-            <span class="student-menu__role">
-              {{ user.role === 'STUDENT' ? 'Estudiante' : user.role }}
+            <span class="student-menu__profile-cta">
+              Ver mi perfil
+              <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
             </span>
-          }
-          <span class="student-menu__profile-cta">
-            Ver mi perfil
-            <ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon>
-          </span>
+          </div>
         </button>
       } @else {
         <div class="student-menu__profile student-menu__profile--empty">
