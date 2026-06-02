@@ -14,7 +14,7 @@ import { StudentSideMenuComponent } from './shared/student-side-menu/student-sid
   imports: [IonApp, IonRouterOutlet, StudentSideMenuComponent],
 })
 export class AppComponent implements OnInit {
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
   private readonly tasksApi = inject(StudentTasksService);
   private readonly taskNotifications = inject(StudentTaskNotificationsService);
 

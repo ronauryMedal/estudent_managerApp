@@ -79,16 +79,49 @@ ion-back-button {
   --padding-end: 6px;
 }
 
+/* El título centrado no debe tapar botones del toolbar (menú, atrás). */
+ion-header ion-toolbar ion-title {
+  pointer-events: none;
+}
+
+ion-header ion-toolbar ion-buttons[slot='start'] {
+  position: relative;
+  z-index: 12;
+  pointer-events: auto;
+}
+
 ion-fab-button {
   --box-shadow: var(--app-shadow-md);
   transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/** Texto orientativo sin caja (sustituye paneles con rutas API). */
+.page-info {
+  margin: 0.35rem 0 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--app-text-muted);
+
+  strong {
+    color: var(--app-text-secondary);
+    font-weight: 600;
+  }
+}
+
 ion-modal {
   --border-radius: var(--app-radius-xl) var(--app-radius-xl) 0 0;
+  --background: var(--ion-background-color);
+  --color: var(--ion-text-color);
 }
 
 ion-modal ion-toolbar {
+  --background: var(--ion-toolbar-background);
+  --color: var(--ion-text-color);
   --padding-start: 4px;
   --padding-end: 8px;
+}
+
+ion-modal ion-content {
+  --background: var(--ion-background-color);
+  --color: var(--ion-text-color);
 }

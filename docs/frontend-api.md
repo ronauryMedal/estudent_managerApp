@@ -2,10 +2,29 @@
 
 Guía rápida de endpoints para consumir la API desde frontend (Ionic/Angular u otro).
 
-- Base URL local: `http://localhost:3000`
-- Swagger UI: `http://localhost:3000/docs`
-- OpenAPI JSON: `http://localhost:3000/docs-json`
+**Configuración Ionic + Angular (environments, HttpClient, túnel, fotos):** [frontend-ionic-setup.md](./frontend-ionic-setup.md)
+
+- Base URL local (desarrollo): `http://localhost:3000`
+- **Base URL producción:** `https://videos-nearest-potential-sticker.trycloudflare.com` → `environment.prod.ts`
+- Swagger local: `http://localhost:3000/docs` · producción: `https://videos-nearest-potential-sticker.trycloudflare.com/docs`
+- OpenAPI JSON: `{base}/docs-json`
 - Auth: `Bearer <access_token>` en header `Authorization`.
+
+### URL de la API según dónde corre el front
+
+Todas las peticiones usan `environment.apiUrl` en `src/environments/environment.ts` (sin `/` final). Los servicios construyen rutas como `{apiUrl}/auth/login`, `{apiUrl}/tasks/me`, etc.
+
+| Entorno | `apiUrl` recomendada | Notas |
+|---------|----------------------|--------|
+| Navegador o `ionic serve` en PC | `http://localhost:3000` | API en la misma máquina |
+| **Emulador Android** (Android Studio) | `http://10.0.2.2:3000` | `10.0.2.2` es el `localhost` de tu PC visto desde el emulador |
+| **Celular físico** (misma Wi‑Fi que la PC) | `http://<IP-LAN-de-tu-PC>:3000` | Ej. `http://192.168.1.42:3000`. En Windows: `ipconfig` → IPv4 |
+| **Producción / APK release** | `https://videos-nearest-potential-sticker.trycloudflare.com` | Ya configurado en `environment.prod.ts`; build con `ng build` (config production) |
+| **Móvil fuera de la red local** (otro túnel) | `https://<tu-túnel>.trycloudflare.com` | Mismo patrón si cambiás el túnel; ver [Instalación en Android](#instalación-en-android-capacitor) |
+
+Swagger y OpenAPI en emulador: `http://10.0.2.2:3000/docs` (sustituí la base según la fila que uses).
+
+**Instalar y probar en Android:** sección [Instalación en Android (Capacitor)](#instalación-en-android-capacitor). Detalle de `environment`, fotos y túnel: [frontend-ionic-setup.md](./frontend-ionic-setup.md).
 
 ## Flujo de autenticación
 
@@ -24,6 +43,8 @@ Body:
   "password": "Contrasena123"
 }
 ```
+
+**Validación:** la contraseña debe tener **al menos 8 caracteres** (menos → `400`). Email duplicado → `409`.
 
 Response (resumen):
 
@@ -925,12 +946,96 @@ El seed imprime IDs útiles en consola. Si falla con tabla inexistente, aplicar 
 
 ---
 
+## Instalación en Android (Capacitor)
+
+La app Ionic empaqueta el build web (`www/`) con Capacitor. **Antes de compilar**, configurá la URL correcta en `src/environments/environment.ts` (tabla al inicio de este documento).
+
+### 1. API en marcha
+
+El backend debe escuchar en el puerto **3000** y ser alcanzable desde el dispositivo:
+
+- Emulador: API en tu PC → `apiUrl: 'http://10.0.2.2:3000'`
+- Celular en Wi‑Fi: API en tu PC → `apiUrl: 'http://192.168.x.x:3000'` (IP LAN, no `localhost`)
+- Comprobá en el navegador del emulador o del móvil: `{apiUrl}/docs` debe abrir Swagger
+
+Si la API corre en Docker en tu PC, publicá el puerto `3000:3000` y usá las mismas URLs (`10.0.2.2` o IP LAN).
+
+### 2. Dependencias y plataforma Android (solo la primera vez)
+
+```bash
+npm install @capacitor/android --save
+npx cap add android
+```
+
+Requisitos: [Android Studio](https://developer.android.com/studio), SDK y un emulador o dispositivo con depuración USB.
+
+### 3. Build web y sincronizar
+
+Cada vez que cambies código del front **o** `environment.apiUrl`:
+
+```bash
+npm run build
+npx cap sync android
+```
+
+### 4. Abrir en Android Studio y ejecutar
+
+```bash
+npx cap open android
+```
+
+En Android Studio: **Run** ▶ en emulador o dispositivo conectado.
+
+### 5. HTTP en desarrollo (cleartext)
+
+Si usás `http://` (no HTTPS), Android 9+ bloquea tráfico claro por defecto. Tras `npx cap add android`, en `android/app/src/main/AndroidManifest.xml`, dentro de `<application ...>`:
+
+```xml
+android:usesCleartextTraffic="true"
+```
+
+Solo para desarrollo. En producción usá HTTPS y `environment.prod.ts`.
+
+### 6. Túnel para probar en 4G u otra red
+
+Con la API en `localhost:3000` de tu PC:
+
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+Copiá la URL `https://....trycloudflare.com` en `environment.apiUrl`, volvé a `npm run build` y `npx cap sync android`. No hace falta `usesCleartextTraffic` si el túnel es HTTPS.
+
+### 7. Errores frecuentes
+
+| Síntoma | Causa habitual | Solución |
+|---------|----------------|----------|
+| “No hay conexión con el servidor” | `apiUrl` sigue en `localhost` en el APK | Usar `10.0.2.2` (emulador) o IP LAN (físico) |
+| Timeout / red | Firewall de Windows | Permitir Node o el puerto 3000 en red privada |
+| Fotos o avatares rotos | `photoUrl` relativo | El front concatena `apiUrl` + `photoUrl`; la base debe ser la misma que para el API |
+| Cambié la URL y no aplica | Build viejo en `www/` | `npm run build` + `npx cap sync android` |
+
+### 8. Producción
+
+En release (`ng build` con configuración production), `angular.json` reemplaza por `environment.prod.ts`:
+
+`https://videos-nearest-potential-sticker.trycloudflare.com`
+
+```bash
+npm run build
+npx cap sync android
+```
+
+Para probar producción en el emulador sin cambiar `environment.ts`, usá ese build (no el de desarrollo).
+
+---
+
 ## Docker y URL en el front
 
-- API en Docker: `http://localhost:3000` desde el navegador.
-- Emulador Android: suele requerir `http://10.0.2.2:3000` o la IP de tu PC.
-- Tras cambios en el backend: `docker compose build api && docker compose up -d api`.
-- Las fotos de perfil se persisten en el volumen Docker `uploads_data` (ruta interna `/app/uploads`). No se pierden al reconstruir la imagen, salvo que uses `docker compose down -v`.
+- API en Docker en tu PC: desde el navegador del PC, `http://localhost:3000`.
+- Desde Android, misma regla que arriba: `http://10.0.2.2:3000` o IP LAN, no `localhost`.
+- Tras cambios en el backend: `docker compose build api && docker compose up -d api` (si usás compose en el repo del API).
+- Fotos de perfil en Docker: volumen `uploads_data` (`/app/uploads` dentro del contenedor).
 
 ---
 

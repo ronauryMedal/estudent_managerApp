@@ -4,7 +4,8 @@
   contentId="main-content"
   side="start"
   type="overlay"
-  swipeGesture="true"
+  [disabled]="!auth.isAuthenticated()"
+  [swipeGesture]="auth.isAuthenticated()"
 >
   <ion-content class="student-menu__content" [scrollY]="false">
     <div class="student-menu__inner">

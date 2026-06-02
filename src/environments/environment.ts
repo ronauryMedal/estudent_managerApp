@@ -7,6 +7,11 @@ export const environment = {
   /**
    * Origen del backend (sin `/` final).
    * Auth: POST `{apiUrl}/auth/login` y POST `{apiUrl}/auth/register`
+   *
+   * Android emulador:     'http://10.0.2.2:3000'
+   * Celular misma Wi‑Fi:  'http://<IP-LAN-PC>:3000'
+   * Producción (build release): ver environment.prod.ts
+   *   https://videos-nearest-potential-sticker.trycloudflare.com
    */
   apiUrl: 'http://localhost:3000',
 };

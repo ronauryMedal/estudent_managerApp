@@ -17,9 +17,9 @@
   </ion-refresher>
 
   <div class="tasks-page">
-    <p class="tasks-hint">
-      Entregas y trabajos enlazados a tus materias (<code>GET /tasks</code>).
-      Las fechas próximas también aparecen en <strong>Inicio</strong>.
+    <p class="page-info">
+      Entregas y trabajos de tus materias. Las fechas próximas también se ven en
+      <strong>Inicio</strong>.
     </p>
 
     @if (offlineBannerMessage(); as offlineMessage) {
@@ -146,14 +146,25 @@
                     type="button"
                     class="tasks-card__done"
                     [disabled]="completingTaskId() === task.id || deletingTaskId() === task.id"
-                    [attr.aria-label]="'Marcar realizada ' + task.title"
-                    (click)="completeTask(task)"
+                    [attr.aria-label]="'Marcar como realizada: ' + task.title"
+                    (click)="confirmCompleteTask(task)"
                   >
                     @if (completingTaskId() === task.id) {
                       <ion-spinner name="crescent" color="success"></ion-spinner>
+                      <span>Guardando…</span>
                     } @else {
-                      <ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon>
-                      Realizada
+                      <ion-icon
+                        name="checkmark-circle-outline"
+                        aria-hidden="true"
+                      ></ion-icon>
+                      <span class="tasks-card__done-text">
+                        <span class="tasks-card__done-label"
+                          >Marcar como realizada</span
+                        >
+                        <span class="tasks-card__done-hint"
+                          >Confirmá que ya la terminaste</span
+                        >
+                      </span>
                     }
                   </button>
                 </div>
@@ -194,7 +205,7 @@
         <ion-title>Nueva tarea</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content class="ion-padding tasks-create-modal">
       <form [formGroup]="form" (keydown.enter)="$event.preventDefault()">
         <ion-list lines="full">
           <ion-item>
@@ -497,9 +508,9 @@
         </ion-list>
         <ion-button
           expand="block"
-          color="dark"
+          color="primary"
           type="button"
-          class="ion-margin-top"
+          class="tasks-modal-save ion-margin-top"
           [disabled]="createSubmitting()"
           (click)="submitCreate()"
         >

@@ -1,3 +1,56 @@
+/* Modal «Nueva tarea» — legible en modo claro y oscuro */
+
+.tasks-create-modal {
+  --background: var(--ion-background-color);
+  --color: var(--ion-text-color);
+  color-scheme: light dark;
+
+  ion-list {
+    background: transparent;
+    padding: 0;
+  }
+
+  ion-item {
+    --background: var(--app-surface);
+    --color: var(--ion-text-color);
+    --border-color: var(--app-border);
+    --highlight-color-focused: var(--ion-color-primary);
+    margin-bottom: 0.35rem;
+    border-radius: var(--app-radius-sm);
+  }
+
+  ion-input,
+  ion-textarea,
+  ion-select {
+    --color: var(--ion-text-color);
+    --placeholder-color: var(--app-text-muted);
+  }
+}
+
+.tasks-modal-save {
+  --background: var(--ion-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
+  --background-focused: var(--ion-color-primary-shade);
+  --background-hover: var(--ion-color-primary-tint);
+  --color: var(--ion-color-primary-contrast);
+  --border-radius: var(--app-radius-md);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  min-height: 48px;
+  margin-top: 1rem;
+  margin-bottom: max(0.5rem, env(safe-area-inset-bottom));
+
+  &::part(native) {
+    color: var(--ion-color-primary-contrast);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .tasks-modal-save {
+    --box-shadow: 0 6px 20px rgba(var(--ion-color-primary-rgb), 0.35);
+  }
+}
+
 /* Opciones de investigación IA en modal de nueva tarea. */
 
 .tasks-ai-option {
@@ -40,10 +93,10 @@
   }
 
   small {
-    max-width: 14rem;
     font-size: 0.75rem;
     line-height: 1.35;
     color: var(--app-text-secondary);
+    white-space: normal;
   }
 }
 

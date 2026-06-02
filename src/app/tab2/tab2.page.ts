@@ -35,6 +35,7 @@ import {
   add,
   bookOutline,
   calendarOutline,
+  checkmarkCircleOutline,
   checkmarkDoneOutline,
   clipboardOutline,
   closeCircleOutline,
@@ -67,6 +68,12 @@ import {
   taskContentKey,
   taskIsCompleted,
 } from '../core/utils/dedupe-tasks';
+import {
+  taskCompletedNotifyContent,
+  taskCreateNotifyContent,
+  taskDeletedNotifyContent,
+  taskSyncedNotifyContent,
+} from '../core/utils/task-action-notify-messages';
 import {
   taskDueRelativeLabel,
   taskDueTone,
@@ -214,6 +221,7 @@ export class Tab2Page {
       bookOutline,
       clipboardOutline,
       calendarOutline,
+      checkmarkCircleOutline,
       checkmarkDoneOutline,
       closeCircleOutline,
       cloudUploadOutline,
@@ -466,8 +474,17 @@ export class Tab2Page {
     if (hasPdfs && !this.isOnline()) {
       void this.notify.warning(
         'Subir PDFs para la investigación IA requiere conexión a internet.',
+        'Sin conexión',
       );
       return;
+    }
+
+    if (!this.isOnline() && v.generateAiResearch) {
+      void this.notify.info(
+        'Sin conexión: la tarea se guardará en el dispositivo. La investigación con IA y el correo se procesarán al sincronizar.',
+        'Modo sin conexión',
+        4800,
+      );
     }
 
     const aiResearchOptions = v.generateAiResearch
@@ -506,20 +523,30 @@ export class Tab2Page {
       .subscribe({
         next: (list) => {
           this.applyTaskList(list);
+          const toast = taskCreateNotifyContent({
+            title: v.title,
+            generateAiResearch: v.generateAiResearch,
+            advancedMode: v.advancedMode,
+            forPresentation: v.forPresentation,
+            targetPages: v.targetPages,
+            presentationSlides: v.presentationSlides,
+            hasBookPdf: !!pdfFiles.bookPdf,
+            hasQuestionnairePdf: !!pdfFiles.questionnairePdf,
+            offline: createdOffline,
+          });
           void this.notify.success(
-            createdOffline
-              ? 'Tarea guardada sin conexión. Se sincronizará al volver internet.'
-              : this.createSuccessMessage(v, pdfFiles),
+            toast.message,
+            toast.header,
+            toast.duration,
           );
           this.resetAiPdfFiles();
           this.closeCreateModal();
         },
         error: (err: unknown) => {
-          const message =
-            err instanceof Error
-              ? err.message
-              : 'No se pudo crear la tarea.';
-          void this.notify.error(message);
+          void this.notify.errorFromHttp(
+            err,
+            'No se pudo crear la tarea.',
+          );
         },
       });
   }
@@ -548,20 +575,37 @@ export class Tab2Page {
     }
   }
 
-  completeTask(task: Task): void {
+  async confirmCompleteTask(task: Task): Promise<void> {
+    if (this.completingTaskId() || this.deletingTaskId()) {
+      return;
+    }
+
+    if (!this.isOnline() && !this.isPendingTask(task)) {
+      void this.notify.warning(
+        'Necesitás conexión para marcar esta tarea como realizada.',
+      );
+      return;
+    }
+
+    const ok = await this.notify.confirm({
+      header: '¿Terminaste la tarea?',
+      message: `¿Confirmás que ya terminaste «${task.title}»? Pasará a Realizadas y no recibirás más recordatorios.`,
+      confirmText: 'Sí, la terminé',
+      cancelText: 'Todavía no',
+      overModal: true,
+    });
+    if (ok) {
+      this.markTaskCompleted(task);
+    }
+  }
+
+  private markTaskCompleted(task: Task): void {
     if (this.completingTaskId() || this.deletingTaskId()) {
       return;
     }
 
     if (this.isPendingTask(task)) {
       this.deleteTask(task, 'completed');
-      return;
-    }
-
-    if (!this.isOnline()) {
-      void this.notify.warning(
-        'Necesitás conexión para marcar esta tarea como realizada.',
-      );
       return;
     }
 
@@ -594,8 +638,11 @@ export class Tab2Page {
       .subscribe({
         next: (list) => {
           this.applyTaskList(list);
+          const toast = taskCompletedNotifyContent(task.title);
           void this.notify.success(
-            'Tarea marcada como realizada. Ya no recibirás recordatorios.',
+            toast.message,
+            toast.header,
+            toast.duration,
           );
         },
         error: () => {
@@ -615,9 +662,19 @@ export class Tab2Page {
     }
 
     this.syncSub?.unsubscribe();
+    const pendingBefore = this.pendingCreateCount();
     this.syncSub = this.tasksApi.syncPendingCreates().subscribe({
       next: (list) => {
         this.applyTaskList(list);
+        const synced = Math.max(0, pendingBefore - this.pendingCreateCount());
+        if (synced > 0) {
+          const toast = taskSyncedNotifyContent(synced);
+          void this.notify.success(
+            toast.message,
+            toast.header,
+            toast.duration,
+          );
+        }
       },
     });
   }
@@ -657,10 +714,14 @@ export class Tab2Page {
       .subscribe({
         next: (list) => {
           this.applyTaskList(list);
-          void this.notify.success(
+          const toast =
             reason === 'completed'
-              ? 'Tarea marcada como realizada.'
-              : 'Tarea eliminada.',
+              ? taskCompletedNotifyContent(task.title)
+              : taskDeletedNotifyContent(task.title);
+          void this.notify.success(
+            toast.message,
+            toast.header,
+            toast.duration,
           );
         },
         error: () => {
@@ -722,35 +783,6 @@ export class Tab2Page {
     }
 
     return options;
-  }
-
-  private createSuccessMessage(
-    v: ReturnType<typeof this.form.getRawValue>,
-    pdfFiles: { bookPdf?: File; questionnairePdf?: File },
-  ): string {
-    if (!v.generateAiResearch) {
-      return 'Tarea creada.';
-    }
-
-    const hasBook = !!pdfFiles.bookPdf;
-    const hasQuestionnaire = !!pdfFiles.questionnairePdf;
-
-    if (hasBook && hasQuestionnaire) {
-      return 'Tarea creada. La IA responderá el cuestionario usando tu libro; te avisaremos por correo.';
-    }
-    if (hasQuestionnaire) {
-      return 'Tarea creada. La IA responderá el cuestionario buscando en internet; te avisaremos por correo.';
-    }
-    if (hasBook) {
-      return 'Tarea creada. La IA generará la investigación desde tu PDF; te avisaremos por correo.';
-    }
-    if (v.advancedMode && v.forPresentation) {
-      return 'Tarea creada. La IA preparará investigación, guía de exposición y PowerPoint; te avisaremos por correo.';
-    }
-    if (v.advancedMode) {
-      return `Tarea creada. La IA generará tu investigación (~${v.targetPages} páginas) y la enviará a tu correo.`;
-    }
-    return 'Tarea creada. La IA generará el PDF estándar y lo enviará a tu correo.';
   }
 
   private assignPdfFile(

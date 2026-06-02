@@ -32,18 +32,17 @@
       </ion-segment-button>
     </ion-segment>
 
-    @if (academicRefs(); as refs) {
-      <p class="subjects-hint">
-        El <strong>plan</strong> son las materias que das de alta con
-        <strong>Nueva materia</strong> en carreras creadas por ti
-        (<code>/careers/me</code>). En <strong>Avance</strong> aparecen las
-        registradas con <code>/user-approved-subjects/me</code>.
-        @if (refs.careerId && refs.currentSemester != null) {
-          Tu inscripción académica indica cuatrimestre n.º
-          {{ refs.currentSemester }}.
-        }
-      </p>
-    }
+    <p class="page-info">
+      @if (segment() === 'plan') {
+        <strong>Mi plan:</strong> materias de tu carrera. Tocá <strong>+</strong>
+        para crear una nueva.
+      } @else {
+        <strong>Avance:</strong> materias que estás cursando en este período.
+      }
+      @if (academicRefs()?.currentSemester != null) {
+        Cuatrimestre actual: {{ academicRefs()!.currentSemester }}.
+      }
+    </p>
 
     @if (
       loading() &&
@@ -68,9 +67,8 @@
     @if (segment() === 'plan') {
       @if (planSubjects().length === 0 && !loading()) {
         <p class="subjects-empty">
-          Aún no tienes materias en tu plan. Pulsa el botón
-          <strong>+</strong> para crear una (necesitas al menos una carrera en
-          <code>/careers/me</code>).
+          Aún no tenés materias en tu plan. Tocá <strong>+</strong> para crear la
+          primera (configurá tu carrera si aún no lo hiciste).
         </p>
       } @else {
         <div class="subjects-cards" role="list">
@@ -136,9 +134,8 @@
     @if (segment() === 'approved') {
       @if (enrolledRows().length === 0 && !loading()) {
         <p class="subjects-empty">
-          No hay materias en tu avance. Desde <strong>Mi plan</strong> abre una
-          materia y usa <strong>Añadir a mi avance</strong>, o registra la
-          inscripción vía API.
+          No hay materias en tu avance. En <strong>Mi plan</strong> abrí una
+          materia y elegí <strong>Añadir a mi avance</strong>.
         </p>
       } @else {
         <div class="subjects-cards" role="list">

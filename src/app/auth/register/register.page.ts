@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import {
   AbstractControl,
@@ -14,6 +15,11 @@ import {
 } from '@ionic/angular/standalone';
 
 import { AuthService } from '../../core/services/auth.service';
+import { httpErrorMessage } from '../../core/utils/api-error-message';
+import { trimmedMinLength } from '../../core/utils/trimmed-validators';
+
+/** Mínimo exigido por el API (`POST /auth/register`). */
+const PASSWORD_MIN_LENGTH = 8;
 
 function passwordsMatch(
   control: AbstractControl,
@@ -53,10 +59,13 @@ export class RegisterPage {
 
   readonly form = this.fb.nonNullable.group(
     {
-      firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      firstName: ['', [Validators.required, trimmedMinLength(2)]],
+      lastName: ['', [Validators.required, trimmedMinLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: [
+        '',
+        [Validators.required, Validators.minLength(PASSWORD_MIN_LENGTH)],
+      ],
       confirmPassword: ['', [Validators.required]],
     },
     { validators: passwordsMatch },
@@ -71,26 +80,32 @@ export class RegisterPage {
       return;
     }
 
-    this.submitting.set(true);
     const v = this.form.getRawValue();
     const name = `${v.firstName.trim()} ${v.lastName.trim()}`.trim();
+    if (name.length < 2) {
+      this.submittedAttempt.set(true);
+      this.errorMessage.set(
+        'Introduce nombre y apellido válidos (mínimo 2 letras cada uno).',
+      );
+      return;
+    }
+
+    this.submitting.set(true);
 
     this.auth
       .register({
         name,
-        email: v.email.trim(),
+        email: v.email.trim().toLowerCase(),
         password: v.password,
       })
       .subscribe({
         next: () => {
           this.submitting.set(false);
-          void this.router.navigateByUrl('/');
+          void this.router.navigateByUrl('/setup-career');
         },
-        error: () => {
+        error: (err: unknown) => {
           this.submitting.set(false);
-          this.errorMessage.set(
-            'No se pudo crear la cuenta. Inténtalo de nuevo.',
-          );
+          this.errorMessage.set(this.registerErrorMessage(err));
         },
       });
   }
@@ -118,6 +133,16 @@ export class RegisterPage {
   showConfirmError(): boolean {
     const c = this.form.controls.confirmPassword;
     return c.invalid && (this.submittedAttempt() || c.touched);
+  }
+
+  private registerErrorMessage(err: unknown): string {
+    if (err instanceof HttpErrorResponse && err.status === 409) {
+      return 'Ese correo ya está registrado. Probá iniciar sesión.';
+    }
+    return httpErrorMessage(
+      err,
+      'No se pudo crear la cuenta. Inténtalo de nuevo.',
+    );
   }
 
   showPasswordMismatch(): boolean {

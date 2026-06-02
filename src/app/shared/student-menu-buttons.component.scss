@@ -1,0 +1,29 @@
+:host {
+  display: contents;
+}
+
+ion-menu-button.student-menu-btn {
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  --padding-start: 10px;
+  --padding-end: 10px;
+  --border-radius: 12px;
+  --color: var(--ion-text-color);
+
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  margin: 0;
+  margin-inline-start: 2px;
+  position: relative;
+  z-index: 12;
+  touch-action: manipulation;
+
+  &::part(native) {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+  }
+}

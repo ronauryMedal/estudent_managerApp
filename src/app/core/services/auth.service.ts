@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY, apiOrigin } from '../auth-storage';
@@ -25,7 +25,9 @@ export class AuthService {
 
   readonly currentUser = this._currentUser.asReadonly();
   readonly accessToken = this._accessToken.asReadonly();
-  readonly isAuthenticated = computed(() => this._accessToken() !== null);
+  readonly isAuthenticated = computed(() =>
+    Boolean(this._accessToken()?.trim()),
+  );
 
   constructor() {
     this.restoreSessionFromStorage();
@@ -34,13 +36,19 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.authBaseUrl}/login`, credentials)
-      .pipe(tap((response) => this.persistSession(response)));
+      .pipe(
+        map((response) => this.assertAuthResponse(response)),
+        tap((response) => this.persistSession(response)),
+      );
   }
 
   register(data: RegisterRequest): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.authBaseUrl}/register`, data)
-      .pipe(tap((response) => this.persistSession(response)));
+      .pipe(
+        map((response) => this.assertAuthResponse(response)),
+        tap((response) => this.persistSession(response)),
+      );
   }
 
   logout(): void {
@@ -62,16 +70,25 @@ export class AuthService {
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(normalized));
   }
 
+  private assertAuthResponse(response: AuthResponse): AuthResponse {
+    const token = response?.access_token?.trim();
+    if (!token || !response?.user?.id) {
+      throw new Error('INVALID_AUTH_RESPONSE');
+    }
+    return response;
+  }
+
   private persistSession(response: AuthResponse): void {
+    const token = response.access_token.trim();
     const user = normalizeUser(response.user);
-    this._accessToken.set(response.access_token);
+    this._accessToken.set(token);
     this._currentUser.set(user);
-    localStorage.setItem(AUTH_TOKEN_KEY, response.access_token);
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
   }
 
   private restoreSessionFromStorage(): void {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = localStorage.getItem(AUTH_TOKEN_KEY)?.trim();
     const rawUser = localStorage.getItem(AUTH_USER_KEY);
 
     if (!token || !rawUser) {

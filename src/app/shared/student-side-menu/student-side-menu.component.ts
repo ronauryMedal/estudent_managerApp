@@ -83,6 +83,6 @@ export class StudentSideMenuComponent {
   async logout(): Promise<void> {
     await this.menuCtrl.close(MENU_ID);
     this.auth.logout();
-    await this.router.navigateByUrl('/login');
+    await this.router.navigateByUrl('/login', { replaceUrl: true });
   }
 }

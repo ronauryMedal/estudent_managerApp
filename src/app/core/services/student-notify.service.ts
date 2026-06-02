@@ -1,5 +1,5 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { httpErrorMessage } from '../utils/api-error-message';
 import { AlertController, ToastController } from '@ionic/angular';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { addIcons } from 'ionicons';
@@ -65,20 +65,20 @@ export class StudentNotifyService {
     });
   }
 
-  success(message: string, header?: string): Promise<void> {
-    return this.present('success', { message, header });
+  success(message: string, header?: string, duration?: number): Promise<void> {
+    return this.present('success', { message, header, duration });
   }
 
-  error(message: string, header?: string): Promise<void> {
-    return this.present('error', { message, header });
+  error(message: string, header?: string, duration?: number): Promise<void> {
+    return this.present('error', { message, header, duration });
   }
 
-  warning(message: string, header?: string): Promise<void> {
-    return this.present('warning', { message, header });
+  warning(message: string, header?: string, duration?: number): Promise<void> {
+    return this.present('warning', { message, header, duration });
   }
 
-  info(message: string, header?: string): Promise<void> {
-    return this.present('info', { message, header });
+  info(message: string, header?: string, duration?: number): Promise<void> {
+    return this.present('info', { message, header, duration });
   }
 
   /** Mensaje de error legible desde respuesta HTTP. */
@@ -87,35 +87,7 @@ export class StudentNotifyService {
   }
 
   parseHttpMessage(err: unknown, fallback: string): string {
-    if (err instanceof HttpErrorResponse) {
-      const apiMsg =
-        typeof err.error === 'object' &&
-        err.error &&
-        'message' in err.error
-          ? String((err.error as { message: unknown }).message)
-          : typeof err.error === 'string'
-            ? err.error
-            : '';
-      if (apiMsg.trim()) {
-        return apiMsg.trim();
-      }
-      if (err.status === 0) {
-        return 'Sin conexión con el servidor. Revisá tu red.';
-      }
-      if (err.status === 401) {
-        return 'Sesión expirada. Volvé a iniciar sesión.';
-      }
-      if (err.status === 403) {
-        return 'No tenés permiso para esta acción.';
-      }
-      if (err.status === 404) {
-        return 'El recurso ya no existe o no se encontró.';
-      }
-      if (err.status === 409) {
-        return 'Ya existe un registro igual o hay un conflicto.';
-      }
-    }
-    return fallback;
+    return httpErrorMessage(err, fallback);
   }
 
   async confirm(opts: ConfirmOptions): Promise<boolean> {
