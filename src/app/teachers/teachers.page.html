@@ -114,14 +114,20 @@
     }
   </div>
 
-  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button color="dark" aria-label="Nuevo profesor" (click)="openCreateModal()">
-      <ion-icon name="add"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
 </ion-content>
 
-<ion-modal [isOpen]="createOpen()" (didDismiss)="closeCreateModal()">
+<app-fab-add
+  label="Nuevo profesor"
+  [withTabBar]="false"
+  [disabled]="createOpen()"
+  (pressed)="openCreateModal()"
+/>
+
+<ion-modal
+  [isOpen]="createOpen()"
+  [backdropDismiss]="true"
+  (didDismiss)="closeCreateModal()"
+>
   <ng-template>
     <ion-header>
       <ion-toolbar>

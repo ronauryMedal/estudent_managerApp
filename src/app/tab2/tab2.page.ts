@@ -8,8 +8,6 @@ import {
 import {
   IonButton,
   IonContent,
-  IonFab,
-  IonFabButton,
   IonHeader,
   IonIcon,
   IonInput,
@@ -80,6 +78,7 @@ import {
   taskIsDueUrgent,
   taskSubjectAccentIndex,
 } from '../core/utils/task-due-display';
+import { AppFabAddComponent } from '../shared/app-fab-add/app-fab-add.component';
 import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
 import { StudentNavBackComponent } from '../shared/student-nav-back.component';
 import { AnimateInDirective } from '../shared/animate-in.directive';
@@ -112,8 +111,7 @@ type TaskFilter = 'pending' | 'completed';
     IonToggle,
     IonRefresher,
     IonRefresherContent,
-    IonFab,
-    IonFabButton,
+    AppFabAddComponent,
     IonModal,
     IonRange,
   ],
@@ -349,10 +347,26 @@ export class Tab2Page {
   }
 
   openCreateModal(): void {
+    if (this.createOpen()) {
+      return;
+    }
+
     if (this.planSubjects().length === 0) {
-      void this.notify.warning(
-        'Creá al menos una materia en la pestaña Materias para enlazar tareas.',
-      );
+      this.subjectsApi.getMyPlanSubjects().subscribe({
+        next: (subjects) => {
+          const list = dedupeSubjects(dedupeById(subjects)).sort((a, b) =>
+            a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+          );
+          this.planSubjects.set(list);
+          if (list.length > 0) {
+            this.openCreateModal();
+          } else {
+            void this.notify.warning(
+              'Creá al menos una materia en la pestaña Materias para enlazar tareas.',
+            );
+          }
+        },
+      });
       return;
     }
 

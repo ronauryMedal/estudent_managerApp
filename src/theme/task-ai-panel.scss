@@ -53,6 +53,34 @@
 
 /* Opciones de investigación IA en modal de nueva tarea. */
 
+/** Switch visible en claro y oscuro (pista + círculo con contraste). */
+.tasks-ai-toggle {
+  flex-shrink: 0;
+  --handle-width: 1.375rem;
+  --handle-height: 1.375rem;
+  --handle-max-height: 1.375rem;
+  --handle-spacing: 0.2rem;
+  --track-width: 3.05rem;
+  --track-height: 1.75rem;
+  --handle-border-radius: 50%;
+  --track-border-radius: 999px;
+  --handle-box-shadow: 0 1px 4px rgba(15, 23, 42, 0.28);
+  --track-background: #cbd5e1;
+  --handle-background: #ffffff;
+  --track-background-checked: var(--ion-color-primary);
+  --handle-background-checked: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tasks-ai-toggle {
+    --handle-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    --track-background: rgba(148, 163, 184, 0.42);
+    --handle-background: #f8fafc;
+    --track-background-checked: var(--ion-color-primary);
+    --handle-background-checked: #ffffff;
+  }
+}
+
 .tasks-ai-option {
   --background: linear-gradient(
     135deg,
@@ -72,19 +100,14 @@
     font-size: 1.25rem;
   }
 
-  ion-toggle {
-    width: 100%;
-    --track-background: var(--app-surface-elevated);
-    --track-background-checked: var(--ion-color-primary);
-    --handle-background: var(--app-surface);
-    --handle-background-checked: var(--ion-color-primary-contrast);
-  }
 }
 
 .tasks-ai-option__text {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.15rem;
+  min-width: 0;
   padding: 0.55rem 0;
 
   strong {
@@ -153,25 +176,25 @@
   box-shadow: var(--app-shadow-sm);
 }
 
-.tasks-ai-panel__toggle {
-  --background: transparent;
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  --min-height: auto;
+.tasks-ai-panel__toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--app-radius-sm);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
 
-  ion-toggle {
-    width: 100%;
-    --track-background: var(--app-surface);
-    --track-background-checked: var(--ion-color-primary);
-    --handle-background: var(--app-surface);
-    --handle-background-checked: var(--ion-color-primary-contrast);
+  .tasks-ai-toggle {
+    margin-left: auto;
   }
 }
 
-.tasks-ai-panel__toggle--presentation {
+.tasks-ai-panel__toggle-row--presentation {
   margin-top: 0.15rem;
 
-  ion-icon {
+  > ion-icon {
+    flex-shrink: 0;
     color: var(--ion-color-primary);
     font-size: 1.2rem;
   }
@@ -179,9 +202,11 @@
 
 .tasks-ai-panel__toggle-text {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.12rem;
-  padding: 0.35rem 0;
+  min-width: 0;
+  padding: 0;
 
   strong {
     font-size: 0.875rem;
@@ -283,8 +308,13 @@
   font-size: 0.8125rem;
 }
 
+.tasks-ai-panel__field--notes {
+  gap: 0.25rem;
+}
+
 .tasks-ai-panel__counter {
   align-self: flex-end;
+  margin-top: 0.15rem;
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--app-text-muted);

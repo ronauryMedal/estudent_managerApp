@@ -12,8 +12,6 @@ import { AlertController } from '@ionic/angular';
 import {
   IonButton,
   IonContent,
-  IonFab,
-  IonFabButton,
   IonHeader,
   IonIcon,
   IonInput,
@@ -44,6 +42,7 @@ import { StudentTeachersService } from '../core/services/student-teachers.servic
 import { dedupeById } from '../core/utils/dedupe-by-id';
 import { dedupeTeachers } from '../core/utils/dedupe-teachers';
 import { userInitials } from '../core/utils/user-initials';
+import { AppFabAddComponent } from '../shared/app-fab-add/app-fab-add.component';
 import { StudentNavBackComponent } from '../shared/student-nav-back.component';
 
 @Component({
@@ -66,8 +65,7 @@ import { StudentNavBackComponent } from '../shared/student-nav-back.component';
     IonRefresher,
     IonRefresherContent,
     IonModal,
-    IonFab,
-    IonFabButton,
+    AppFabAddComponent,
   ],
   templateUrl: './teachers.page.html',
   styleUrl: './teachers.page.scss',
@@ -167,6 +165,9 @@ export class TeachersPage {
   }
 
   openCreateModal(): void {
+    if (this.createOpen()) {
+      return;
+    }
     this.form.reset({ name: '', email: '' });
     this.submittedAttempt.set(false);
     this.createOpen.set(true);

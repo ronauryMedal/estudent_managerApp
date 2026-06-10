@@ -190,14 +190,19 @@
     }
   </div>
 
-  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button color="primary" class="app-pressable" aria-label="Nueva tarea" (click)="openCreateModal()">
-      <ion-icon name="add"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
 </ion-content>
 
-<ion-modal [isOpen]="createOpen()" (didDismiss)="closeCreateModal()">
+<app-fab-add
+  label="Nueva tarea"
+  [disabled]="createOpen()"
+  (pressed)="openCreateModal()"
+/>
+
+<ion-modal
+  [isOpen]="createOpen()"
+  [backdropDismiss]="true"
+  (didDismiss)="closeCreateModal()"
+>
   <ng-template>
     <ion-header>
       <ion-toolbar>
@@ -252,17 +257,19 @@
               name="sparkles-outline"
               aria-hidden="true"
             ></ion-icon>
+            <div class="tasks-ai-option__text">
+              <strong>Investigación con IA</strong>
+              <small>Genera un PDF académico y lo envía a tu correo.</small>
+            </div>
             <ion-toggle
+              slot="end"
+              class="tasks-ai-toggle"
+              mode="ios"
+              color="primary"
               formControlName="generateAiResearch"
-              labelPlacement="start"
-              justify="space-between"
+              aria-label="Investigación con IA"
               (ionChange)="onAiResearchToggle($any($event).detail.checked)"
-            >
-              <div class="tasks-ai-option__text">
-                <strong>Investigación con IA</strong>
-                <small>Genera un PDF académico y lo envía a tu correo.</small>
-              </div>
-            </ion-toggle>
+            ></ion-toggle>
           </ion-item>
 
           @if (form.controls.generateAiResearch.value) {
@@ -390,19 +397,20 @@
 
                 <div class="tasks-ai-panel__divider" aria-hidden="true"></div>
 
-                <ion-item class="tasks-ai-panel__toggle" lines="none">
+                <div class="tasks-ai-panel__toggle-row">
+                  <div class="tasks-ai-panel__toggle-text">
+                    <strong>Modo avanzado</strong>
+                    <small>Elegís páginas, enfoque y exposición.</small>
+                  </div>
                   <ion-toggle
+                    class="tasks-ai-toggle"
+                    mode="ios"
+                    color="primary"
                     formControlName="advancedMode"
-                    labelPlacement="start"
-                    justify="space-between"
+                    aria-label="Modo avanzado"
                     (ionChange)="onAdvancedModeToggle($any($event).detail.checked)"
-                  >
-                    <div class="tasks-ai-panel__toggle-text">
-                      <strong>Modo avanzado</strong>
-                      <small>Elegís páginas, enfoque y exposición.</small>
-                    </div>
-                  </ion-toggle>
-                </ion-item>
+                  ></ion-toggle>
+                </div>
 
                 @if (!form.controls.advancedMode.value) {
                   <p class="tasks-ai-panel__standard-hint">
@@ -444,28 +452,25 @@
 
                     <div class="tasks-ai-panel__divider" aria-hidden="true"></div>
 
-                    <ion-item
-                      class="tasks-ai-panel__toggle tasks-ai-panel__toggle--presentation"
-                      lines="none"
+                    <div
+                      class="tasks-ai-panel__toggle-row tasks-ai-panel__toggle-row--presentation"
                     >
                       <ion-icon
-                        slot="start"
                         name="easel-outline"
                         aria-hidden="true"
                       ></ion-icon>
+                      <div class="tasks-ai-panel__toggle-text">
+                        <strong>Material de exposición</strong>
+                        <small>Guía PDF + PowerPoint en el mismo correo.</small>
+                      </div>
                       <ion-toggle
+                        class="tasks-ai-toggle"
+                        mode="ios"
+                        color="primary"
                         formControlName="forPresentation"
-                        labelPlacement="start"
-                        justify="space-between"
-                      >
-                        <div class="tasks-ai-panel__toggle-text">
-                          <strong>Material de exposición</strong>
-                          <small
-                            >Guía PDF + PowerPoint en el mismo correo.</small
-                          >
-                        </div>
-                      </ion-toggle>
-                    </ion-item>
+                        aria-label="Material de exposición"
+                      ></ion-toggle>
+                    </div>
 
                     @if (form.controls.forPresentation.value) {
                       <div class="tasks-ai-panel__field tasks-ai-panel__field--slides">

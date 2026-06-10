@@ -90,11 +90,6 @@ ion-header ion-toolbar ion-buttons[slot='start'] {
   pointer-events: auto;
 }
 
-ion-fab-button {
-  --box-shadow: var(--app-shadow-md);
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 /** Texto orientativo sin caja (sustituye paneles con rutas API). */
 .page-info {
   margin: 0.35rem 0 0.85rem;

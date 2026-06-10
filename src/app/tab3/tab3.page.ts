@@ -20,8 +20,6 @@ import {
   IonItem,
   IonLabel,
   IonList,
-  IonFab,
-  IonFabButton,
   IonModal,
   IonRefresher,
   IonRefresherContent,
@@ -88,6 +86,7 @@ import {
   subjectScheduleTrackKey,
   subjectUsesPhysicalLocation,
 } from '../core/utils/subject-schedule-display';
+import { AppFabAddComponent } from '../shared/app-fab-add/app-fab-add.component';
 import { StudentMenuButtonsComponent } from '../shared/student-menu-buttons.component';
 import { StudentNavBackComponent } from '../shared/student-nav-back.component';
 import { AnimateInDirective } from '../shared/animate-in.directive';
@@ -126,8 +125,7 @@ export interface EnrolledSubjectRow {
     IonSpinner,
     IonRefresher,
     IonRefresherContent,
-    IonFab,
-    IonFabButton,
+    AppFabAddComponent,
     IonModal,
     IonButtons,
     IonInput,
@@ -498,10 +496,23 @@ export class Tab3Page {
   }
 
   openCreateModal(): void {
+    if (this.createOpen()) {
+      return;
+    }
+
     if (this.myCareersList().length === 0) {
-      void this.notify.warning(
-        'Creá primero una carrera en tu plan para poder añadir materias.',
-      );
+      this.careersApi.getMyCareers().subscribe({
+        next: (list) => {
+          this.myCareersList.set(list);
+          if (list.length > 0) {
+            this.openCreateModal();
+          } else {
+            void this.notify.warning(
+              'Creá primero una carrera en tu plan para poder añadir materias.',
+            );
+          }
+        },
+      });
       return;
     }
     const first = this.myCareersList()[0]!.id;
